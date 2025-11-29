@@ -1,4 +1,5 @@
 import React from 'react';
+import Link from 'next/link';
 import { Job } from '@/types/job';
 
 interface JobCardProps {
@@ -61,9 +62,20 @@ const JobCard: React.FC<JobCardProps> = ({ job }) => {
                     </span>
                 </div>
 
-                <button className="bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-md transition-colors duration-200 text-sm">
-                    Apply Now
-                </button>
+                <div className="flex gap-3">
+                    <Link
+                        href={`/jobs/${job.id}`}
+                        className="flex-1 text-center bg-white hover:bg-blue-50 text-blue-600 border border-blue-600 font-medium py-2 px-4 rounded-md transition-colors duration-200 text-sm"
+                    >
+                        Xem chi tiết
+                    </Link>
+                    <Link
+                        href={`/jobs/${job.id}/apply`}
+                        className="flex-1 text-center bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-md transition-colors duration-200 text-sm"
+                    >
+                        Apply Now
+                    </Link>
+                </div>
             </div>
         </div>
     );

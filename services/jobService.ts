@@ -61,3 +61,34 @@ export const searchJobs = async (query: string): Promise<Job[]> => {
         return [];
     }
 };
+
+export const getJobById = async (id: number): Promise<Job | null> => {
+    try {
+        const { data, error } = await supabase
+            .from('jobs')
+            .select('*')
+            .eq('id', id)
+            .single();
+
+        if (error) {
+            console.error('Error fetching job by id:', error);
+            return null;
+        }
+
+        if (!data) return null;
+
+        return {
+            id: data.id,
+            title: data.title,
+            company: data.company,
+            location: data.location,
+            salary: data.salary,
+            tags: data.tags || [],
+            description: data.description,
+            created_at: data.created_at,
+        };
+    } catch (error) {
+        console.error('Unexpected error in getJobById:', error);
+        return null;
+    }
+};
