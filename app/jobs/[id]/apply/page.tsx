@@ -3,23 +3,73 @@
 import React, { useState } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import Link from 'next/link';
+import { createClient } from '@/utils/supabase/client';
 
 export default function JobApplicationPage() {
     const router = useRouter();
     const params = useParams();
     const { id } = params;
+    const supabase = createClient();
 
     const [fullname, setFullname] = useState('');
     const [email, setEmail] = useState('');
     const [phone, setPhone] = useState('');
     const [coverLetter, setCoverLetter] = useState('');
     const [cvFile, setCvFile] = useState<File | null>(null);
+    const [isSubmitting, setIsSubmitting] = useState(false);
 
-    const handleSubmit = (e: React.FormEvent) => {
+    const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-        // Logic gửi form sẽ được implement sau
-        alert('Nộp hồ sơ thành công! (Demo)');
-        router.push('/');
+        if (!cvFile) {
+            alert('Vui lòng chọn file CV!');
+            return;
+        }
+
+        setIsSubmitting(true);
+
+        try {
+            // 1. Upload CV to Supabase Storage
+            const fileName = `${Date.now()}_${cvFile.name.replace(/\s/g, '_')}`;
+            const { data: uploadData, error: uploadError } = await supabase.storage
+                .from('resumes')
+                .upload(fileName, cvFile);
+
+            if (uploadError) {
+                throw new Error(`Lỗi upload CV: ${uploadError.message}`);
+            }
+
+            // 2. Get Public URL
+            const { data: { publicUrl } } = supabase.storage
+                .from('resumes')
+                .getPublicUrl(fileName);
+
+            // 3. Insert into 'applications' table
+            const { error: insertError } = await supabase
+                .from('applications')
+                .insert([
+                    {
+                        job_id: Number(id),
+                        fullname,
+                        email,
+                        phone,
+                        cover_letter: coverLetter,
+                        cv_url: publicUrl,
+                        status: 'pending', // Default status
+                    },
+                ]);
+
+            if (insertError) {
+                throw new Error(`Lỗi lưu đơn ứng tuyển: ${insertError.message}`);
+            }
+
+            alert('Nộp hồ sơ thành công!');
+            router.push('/');
+        } catch (error: any) {
+            console.error('Submission error:', error);
+            alert(error.message || 'Đã có lỗi xảy ra. Vui lòng thử lại.');
+        } finally {
+            setIsSubmitting(false);
+        }
     };
 
     const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -60,6 +110,7 @@ export default function JobApplicationPage() {
                                 onChange={(e) => setFullname(e.target.value)}
                                 className="w-full px-4 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all duration-200 placeholder:text-gray-500 text-gray-900"
                                 placeholder="Nguyễn Văn A"
+                                disabled={isSubmitting}
                             />
                         </div>
 
@@ -80,6 +131,7 @@ export default function JobApplicationPage() {
                                     onChange={(e) => setEmail(e.target.value)}
                                     className="w-full px-4 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all duration-200 placeholder:text-gray-500 text-gray-900"
                                     placeholder="example@email.com"
+                                    disabled={isSubmitting}
                                 />
                             </div>
                             <div>
@@ -97,6 +149,7 @@ export default function JobApplicationPage() {
                                     onChange={(e) => setPhone(e.target.value)}
                                     className="w-full px-4 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all duration-200 placeholder:text-gray-500 text-gray-900"
                                     placeholder="0901234567"
+                                    disabled={isSubmitting}
                                 />
                             </div>
                         </div>
@@ -106,7 +159,7 @@ export default function JobApplicationPage() {
                             <label className="block text-sm font-medium text-gray-700 mb-1">
                                 CV / Hồ sơ năng lực (PDF) <span className="text-red-500">*</span>
                             </label>
-                            <div className="mt-1 flex justify-center px-6 pt-5 pb-6 border-2 border-gray-300 border-dashed rounded-md hover:border-blue-400 transition-colors duration-200 bg-gray-50 hover:bg-blue-50 cursor-pointer relative">
+                            <div className={`mt-1 flex justify-center px-6 pt-5 pb-6 border-2 border-dashed rounded-md transition-colors duration-200 ${isSubmitting ? 'bg-gray-100 border-gray-300 cursor-not-allowed' : 'border-gray-300 hover:border-blue-400 bg-gray-50 hover:bg-blue-50 cursor-pointer'} relative`}>
                                 <div className="space-y-1 text-center">
                                     <svg
                                         className="mx-auto h-12 w-12 text-gray-400"
@@ -125,7 +178,7 @@ export default function JobApplicationPage() {
                                     <div className="flex text-sm text-gray-600 justify-center">
                                         <label
                                             htmlFor="cv-upload"
-                                            className="relative cursor-pointer bg-transparent rounded-md font-medium text-blue-600 hover:text-blue-500 focus-within:outline-none focus-within:ring-2 focus-within:ring-offset-2 focus-within:ring-blue-500"
+                                            className={`relative rounded-md font-medium text-blue-600 focus-within:outline-none focus-within:ring-2 focus-within:ring-offset-2 focus-within:ring-blue-500 ${isSubmitting ? 'cursor-not-allowed text-gray-500' : 'cursor-pointer hover:text-blue-500 bg-transparent'}`}
                                         >
                                             <span>Tải lên file</span>
                                             <input
@@ -136,6 +189,7 @@ export default function JobApplicationPage() {
                                                 accept=".pdf"
                                                 onChange={handleFileChange}
                                                 required
+                                                disabled={isSubmitting}
                                             />
                                         </label>
                                         <p className="pl-1">hoặc kéo thả vào đây</p>
@@ -165,6 +219,7 @@ export default function JobApplicationPage() {
                                 onChange={(e) => setCoverLetter(e.target.value)}
                                 className="w-full px-4 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all duration-200 placeholder:text-gray-500 text-gray-900"
                                 placeholder="Hãy viết đôi lời giới thiệu về bản thân và lý do bạn phù hợp với vị trí này..."
+                                disabled={isSubmitting}
                             />
                         </div>
 
@@ -172,15 +227,29 @@ export default function JobApplicationPage() {
                         <div className="flex items-center justify-end gap-4 pt-4 border-t border-gray-100">
                             <Link
                                 href={`/jobs/${id}`}
-                                className="text-gray-600 hover:text-gray-800 font-medium text-sm px-4 py-2"
+                                className={`text-gray-600 hover:text-gray-800 font-medium text-sm px-4 py-2 ${isSubmitting ? 'pointer-events-none opacity-50' : ''}`}
                             >
                                 Hủy bỏ
                             </Link>
                             <button
                                 type="submit"
-                                className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-8 rounded-md shadow-md hover:shadow-lg transition-all duration-200 transform hover:-translate-y-0.5 w-full sm:w-auto"
+                                disabled={isSubmitting}
+                                className={`bg-blue-600 text-white font-bold py-3 px-8 rounded-md shadow-md transition-all duration-200 w-full sm:w-auto flex items-center justify-center ${isSubmitting
+                                        ? 'opacity-70 cursor-not-allowed'
+                                        : 'hover:bg-blue-700 hover:shadow-lg transform hover:-translate-y-0.5'
+                                    }`}
                             >
-                                Nộp hồ sơ ứng tuyển
+                                {isSubmitting ? (
+                                    <>
+                                        <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                                            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                        </svg>
+                                        Đang nộp...
+                                    </>
+                                ) : (
+                                    'Nộp hồ sơ ứng tuyển'
+                                )}
                             </button>
                         </div>
                     </form>
