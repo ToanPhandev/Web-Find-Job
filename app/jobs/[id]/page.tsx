@@ -1,6 +1,7 @@
 import React from 'react';
 import Link from 'next/link';
 import { getJobById } from '@/services/jobService';
+import AIJobAnalyzer from '@/components/AIJobAnalyzer';
 
 interface PageProps {
     params: Promise<{ id: string }>;
@@ -137,6 +138,7 @@ export default async function JobDetailPage({ params }: PageProps) {
             {/* Content */}
             <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
                 <div className="bg-white rounded-lg shadow-sm p-6 sm:p-8">
+                    <AIJobAnalyzer description={job.description} />
                     <h3 className="text-xl font-bold text-gray-900 mb-4 border-b pb-2">
                         Mô tả công việc
                     </h3>

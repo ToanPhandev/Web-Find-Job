@@ -4,9 +4,11 @@ import React, { useEffect, useState } from 'react';
 import { Job } from '@/types/job';
 import { getJobs } from '@/services/jobService';
 import JobList from '@/components/JobList';
+import SearchBar from '@/components/SearchBar';
 
 export default function Home() {
   const [jobs, setJobs] = useState<Job[]>([]);
+  const [filteredJobs, setFilteredJobs] = useState<Job[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -16,6 +18,7 @@ export default function Home() {
         setIsLoading(true);
         const data = await getJobs();
         setJobs(data);
+        setFilteredJobs(data);
       } catch (err) {
         console.error('Failed to fetch jobs:', err);
         setError('Có lỗi xảy ra khi tải danh sách việc làm. Vui lòng thử lại sau.');
@@ -26,6 +29,21 @@ export default function Home() {
 
     fetchJobs();
   }, []);
+
+  const handleSearch = (query: string) => {
+    if (!query.trim()) {
+      setFilteredJobs(jobs);
+      return;
+    }
+
+    const lowerQuery = query.toLowerCase();
+    const filtered = jobs.filter(
+      (job) =>
+        job.title.toLowerCase().includes(lowerQuery) ||
+        job.tags.some((tag) => tag.toLowerCase().includes(lowerQuery))
+    );
+    setFilteredJobs(filtered);
+  };
 
   return (
     <main className="min-h-screen bg-gray-50 py-8 px-4 sm:px-6 lg:px-8">
@@ -38,6 +56,8 @@ export default function Home() {
             Tìm kiếm cơ hội thực tập và việc làm tốt nhất cho bạn.
           </p>
         </header>
+
+        <SearchBar onSearch={handleSearch} />
 
         {error && (
           <div className="bg-red-50 border-l-4 border-red-500 p-4 mb-6 rounded-md">
@@ -60,7 +80,7 @@ export default function Home() {
             <span className="ml-3 text-gray-600 font-medium">Đang tải dữ liệu...</span>
           </div>
         ) : (
-          <JobList jobs={jobs} />
+          <JobList jobs={filteredJobs} />
         )}
       </div>
     </main>
