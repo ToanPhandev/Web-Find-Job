@@ -1,29 +1,43 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@/utils/supabase/server';
+import { type EmailOtpType } from '@supabase/supabase-js';
 
 export async function GET(request: Request) {
     const { searchParams, origin } = new URL(request.url);
     const code = searchParams.get('code');
-    // if "next" is in param, use it as the redirect URL
-    const next = searchParams.get('next') ?? '/';
+    const token_hash = searchParams.get('token_hash');
+    const type = searchParams.get('type') as EmailOtpType | null;
+    let next = searchParams.get('next') ?? '/';
 
-    if (code) {
-        const supabase = await createClient();
-        const { error } = await supabase.auth.exchangeCodeForSession(code);
-        if (!error) {
-            const forwardedHost = request.headers.get('x-forwarded-host'); // original origin before load balancer
-            const isLocalEnv = process.env.NODE_ENV === 'development';
-            if (isLocalEnv) {
-                // we can be sure that there is no load balancer in between, so no need to watch for X-Forwarded-Host
-                return NextResponse.redirect(`${origin}${next}`);
-            } else if (forwardedHost) {
-                return NextResponse.redirect(`https://${forwardedHost}${next}`);
-            } else {
-                return NextResponse.redirect(`${origin}${next}`);
-            }
-        }
+    // Định tuyến dựa trên loại xác thực
+    if (type === 'signup') {
+        next = '/login?verified=true';
+    } else if (type === 'recovery') {
+        next = '/reset-password';
     }
 
-    // return the user to an error page with instructions
-    return NextResponse.redirect(`${origin}/auth/auth-code-error`);
+    const supabase = await createClient();
+
+    try {
+        // Ưu tiên sử dụng token_hash (cho Signup/Recovery)
+        if (token_hash && type) {
+            const { error } = await supabase.auth.verifyOtp({
+                token_hash,
+                type,
+            });
+            if (error) throw error;
+        }
+        // Sau đó mới đến code (PKCE)
+        else if (code) {
+            const { error } = await supabase.auth.exchangeCodeForSession(code);
+            if (error) throw error;
+        } else {
+            throw new Error('No auth code or token hash found');
+        }
+
+        return NextResponse.redirect(`${origin}${next}`);
+    } catch (error: any) {
+        console.error('Auth Error:', error.message);
+        return NextResponse.redirect(`${origin}/auth/auth-code-error?error=${encodeURIComponent(error.message)}`);
+    }
 }
