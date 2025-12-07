@@ -2,15 +2,22 @@
 
 import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
+import { useRouter, usePathname } from 'next/navigation';
 import { createClient } from '@/utils/supabase/client';
 import { User } from '@supabase/supabase-js';
+import { LayoutDashboard, Home } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+
+const ADMIN_EMAIL = 'toan.pbsg@gmail.com';
 
 export default function Navbar() {
     const router = useRouter();
+    const pathname = usePathname();
     const supabase = createClient();
     const [user, setUser] = useState<User | null>(null);
     const [isMenuOpen, setIsMenuOpen] = useState(false);
+
+    const isAdminPage = pathname?.startsWith('/admin');
 
     useEffect(() => {
         const getUser = async () => {
@@ -54,15 +61,32 @@ export default function Navbar() {
                     <div className="hidden sm:flex sm:items-center sm:space-x-4">
                         {user ? (
                             <>
-                                <span className="text-sm text-gray-600">
-                                    Chào, <span className="font-medium text-gray-900">{user.email}</span>
-                                </span>
-                                <button
-                                    onClick={handleLogout}
-                                    className="text-gray-500 hover:text-red-600 px-3 py-2 rounded-md text-sm font-medium transition-colors"
-                                >
-                                    Đăng xuất
-                                </button>
+
+
+                                {user.email === ADMIN_EMAIL && (
+                                    <Button variant="ghost" asChild className="text-blue-600 hover:text-blue-700 hover:bg-blue-50">
+                                        {isAdminPage ? (
+                                            <Link href="/">
+                                                <Home className="mr-2 h-4 w-4" />
+                                                Về Trang Chủ
+                                            </Link>
+                                        ) : (
+                                            <Link href="/admin">
+                                                <LayoutDashboard className="mr-2 h-4 w-4" />
+                                                Trang Quản Trị
+                                            </Link>
+                                        )}
+                                    </Button>
+                                )}
+
+                                {!isAdminPage && (
+                                    <button
+                                        onClick={handleLogout}
+                                        className="text-gray-500 hover:text-red-600 px-3 py-2 rounded-md text-sm font-medium transition-colors"
+                                    >
+                                        Đăng xuất
+                                    </button>
+                                )}
                             </>
                         ) : (
                             <>
@@ -109,15 +133,38 @@ export default function Navbar() {
                     <div className="pt-2 pb-3 space-y-1 px-4">
                         {user ? (
                             <>
-                                <div className="py-2 text-sm text-gray-600 border-b border-gray-100 mb-2">
-                                    Chào, <span className="font-medium text-gray-900">{user.email}</span>
-                                </div>
-                                <button
-                                    onClick={handleLogout}
-                                    className="block w-full text-left text-base font-medium text-gray-500 hover:text-red-600 hover:bg-gray-50 px-3 py-2 rounded-md"
-                                >
-                                    Đăng xuất
-                                </button>
+
+
+                                {user.email === ADMIN_EMAIL && (
+                                    isAdminPage ? (
+                                        <Link
+                                            href="/"
+                                            className="flex items-center w-full text-left text-base font-medium text-blue-600 hover:text-blue-700 hover:bg-blue-50 px-3 py-2 rounded-md"
+                                            onClick={() => setIsMenuOpen(false)}
+                                        >
+                                            <Home className="mr-2 h-4 w-4" />
+                                            Về Trang Chủ
+                                        </Link>
+                                    ) : (
+                                        <Link
+                                            href="/admin"
+                                            className="flex items-center w-full text-left text-base font-medium text-blue-600 hover:text-blue-700 hover:bg-blue-50 px-3 py-2 rounded-md"
+                                            onClick={() => setIsMenuOpen(false)}
+                                        >
+                                            <LayoutDashboard className="mr-2 h-4 w-4" />
+                                            Trang Quản Trị
+                                        </Link>
+                                    )
+                                )}
+
+                                {!isAdminPage && (
+                                    <button
+                                        onClick={handleLogout}
+                                        className="block w-full text-left text-base font-medium text-gray-500 hover:text-red-600 hover:bg-gray-50 px-3 py-2 rounded-md"
+                                    >
+                                        Đăng xuất
+                                    </button>
+                                )}
                             </>
                         ) : (
                             <>
