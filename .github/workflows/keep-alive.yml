@@ -1,0 +1,19 @@
+name: Keep Supabase Alive
+
+on:
+  schedule:
+    # Chạy vào 00:00 UTC mỗi ngày
+    - cron: '0 0 * * *'
+  workflow_dispatch: # Cho phép bấm chạy thủ công để test
+
+jobs:
+  ping-supabase:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Ping Supabase Database
+        run: |
+          # Gọi lệnh lấy 1 dòng từ bảng 'jobs' để tạo tương tác
+          # Lưu ý: Thay 'jobs' bằng tên bảng bất kỳ có trong DB của bạn
+          curl -X GET "${{ secrets.SUPABASE_URL }}/rest/v1/jobs?select=id&limit=1" \
+          -H "apikey: ${{ secrets.SUPABASE_KEY }}" \
+          -H "Authorization: Bearer ${{ secrets.SUPABASE_KEY }}"
