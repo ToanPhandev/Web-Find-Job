@@ -1,21 +1,12 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
-import { PublicLayoutWrapper } from "@/components/public-layout-wrapper";
+import { Inter } from "next/font/google";
 import "./globals.css";
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
-  subsets: ["latin"],
-});
-
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
-});
+const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: "Job Board - Tìm Việc Làm IT",
-  description: "Cổng thông tin việc làm và thực tập cho sinh viên IT",
+  title: "Find Job",
+  description: "Cổng thông tin việc làm",
 };
 
 export default function RootLayout({
@@ -25,12 +16,12 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
+      {/* Thêm suppressHydrationWarning={true} vào thẻ body */}
       <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased bg-gray-50`}
+        className={inter.className}
+        suppressHydrationWarning={true}
       >
-        <PublicLayoutWrapper>
-          {children}
-        </PublicLayoutWrapper>
+        {children}
       </body>
     </html>
   );
