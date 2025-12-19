@@ -4,7 +4,7 @@ import React, { useState, useEffect, useCallback } from 'react'
 import { createClient } from '@/utils/supabase/client'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import { Loader2, Upload, FileText, CheckCircle, AlertCircle, Eye, Trash2 } from 'lucide-react'
+import { Loader2, Upload, FileText, CheckCircle, AlertCircle, Eye, Trash2, Maximize2, Minimize2 } from 'lucide-react'
 
 interface CVFile {
     id: string
@@ -36,6 +36,17 @@ export default function CVUpload() {
             }
             return next
         })
+    }
+
+    // Check if all are expanded
+    const areAllExpanded = cvList.length > 0 && expandedIds.size === cvList.length
+
+    const toggleAll = () => {
+        if (areAllExpanded) {
+            setExpandedIds(new Set())
+        } else {
+            setExpandedIds(new Set(cvList.map(cv => cv.id)))
+        }
     }
 
     // 1. Fetch List of CVs
@@ -196,9 +207,21 @@ export default function CVUpload() {
                     <FileText className="size-5 text-blue-600" />
                     Quản lý CV
                 </h3>
-                <p className="text-sm text-gray-500 mt-1">
-                    Danh sách các hồ sơ bạn đã tải lên.
-                </p>
+                <div className="flex flex-col items-start">
+                    <p className="text-sm text-gray-500 mt-1">
+                        Danh sách các hồ sơ bạn đã tải lên.
+                    </p>
+                    {cvList.length > 0 && (
+                        <button
+                            onClick={toggleAll}
+                            className="flex items-center gap-1.5 text-xs text-blue-600 hover:text-blue-700 mt-2 font-medium px-2 py-1 bg-blue-50 hover:bg-blue-100 rounded-md transition-colors"
+                            title={areAllExpanded ? "Thu gọn toàn bộ" : "Hiển thị toàn bộ tên file"}
+                        >
+                            {areAllExpanded ? <Minimize2 className="size-3.5" /> : <Maximize2 className="size-3.5" />}
+                            {areAllExpanded ? "Thu gọn" : "Mở rộng tên"}
+                        </button>
+                    )}
+                </div>
             </div>
 
             {/* List of CVs */}
@@ -216,8 +239,8 @@ export default function CVUpload() {
                                     <div className="flex items-start gap-1">
                                         <p
                                             className={`text-sm font-medium text-gray-900 transition-all duration-200 ${expandedIds.has(cv.id)
-                                                    ? 'whitespace-normal break-all'
-                                                    : 'truncate max-w-[140px]'
+                                                ? 'whitespace-normal break-all'
+                                                : 'truncate max-w-[140px]'
                                                 }`}
                                             title={cv.name}
                                         >
