@@ -1,6 +1,6 @@
 import React from 'react';
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
-import { AppSidebar } from "@/components/app-sidebar";
+import { AppSidebar } from "@/components/app_sidebar";
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
     return (

@@ -21,6 +21,7 @@ import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
 import { createClient } from '@/utils/supabase/client'
 // Đã xóa import use-toast bị lỗi
+import CVUpload from '@/components/cv_upload'
 
 export default function ProfilePage() {
     const supabase = createClient()
@@ -298,19 +299,7 @@ export default function ProfilePage() {
                 {/* Right Column (Sidebar) */}
                 <div className="space-y-6">
                     {/* CV/Resume Upload */}
-                    <div className="bg-white rounded-xl shadow-sm p-6">
-                        <h2 className="font-bold text-gray-900 mb-4">CV / Resume</h2>
-                        <div className="border-2 border-dashed border-gray-200 rounded-xl p-6 flex flex-col items-center justify-center text-center hover:border-blue-400 hover:bg-blue-50 transition-all cursor-pointer group">
-                            <div className="bg-blue-100 p-3 rounded-full mb-3 group-hover:bg-white group-hover:scale-110 transition-transform">
-                                <FileText className="size-6 text-blue-600" />
-                            </div>
-                            <p className="text-sm font-medium text-gray-900">Tải lên CV (PDF)</p>
-                            <Button variant="ghost" size="sm" className="mt-3 text-blue-600 hover:text-blue-700 h-8">
-                                <Download className="size-3 mr-2" />
-                                Tải xuống mẫu
-                            </Button>
-                        </div>
-                    </div>
+                    <CVUpload />
 
                     {/* Skills */}
                     <div className="bg-white rounded-xl shadow-sm p-6">
