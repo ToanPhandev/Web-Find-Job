@@ -39,7 +39,17 @@ function LoginContent() {
                     password,
                 });
                 if (error) throw error;
-                router.push('/');
+
+                // Refresh lại router để Next.js cập nhật Server Components
+                router.refresh();
+
+                // Kiểm tra xem có params 'next' không
+                const nextUrl = searchParams.get('next');
+                if (nextUrl) {
+                    router.push(nextUrl);
+                } else {
+                    router.push('/');
+                }
             } else {
                 // 1. Kiểm tra email đã tồn tại chưa
                 const { data: emailExists } = await supabase.rpc('check_email_exists', {

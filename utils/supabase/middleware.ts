@@ -3,12 +3,12 @@ import { createServerClient } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
 
 export async function updateSession(request: NextRequest) {
-    // 1. Tạo response mặc định
+    // 1. Khởi tạo Response mặc định
     let supabaseResponse = NextResponse.next({
         request,
     })
 
-    // 2. Khởi tạo Supabase Client để đọc/ghi cookie
+    // 2. Khởi tạo Supabase Client
     const supabase = createServerClient(
         process.env.NEXT_PUBLIC_SUPABASE_URL!,
         process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
@@ -18,15 +18,12 @@ export async function updateSession(request: NextRequest) {
                     return request.cookies.getAll()
                 },
                 setAll(cookiesToSet) {
-                    // Set cookie vào request
                     cookiesToSet.forEach(({ name, value, options }) =>
                         request.cookies.set(name, value)
                     )
-                    // Tạo lại response để cập nhật cookie mới
                     supabaseResponse = NextResponse.next({
                         request,
                     })
-                    // Set cookie vào response gửi về trình duyệt
                     cookiesToSet.forEach(({ name, value, options }) =>
                         supabaseResponse.cookies.set(name, value, options)
                     )
@@ -35,50 +32,54 @@ export async function updateSession(request: NextRequest) {
         }
     )
 
-    // 3. Lấy thông tin User hiện tại (Quan trọng: Không dùng getUserData ở đây để tránh lỗi cache)
+    // 3. Lấy User (QUAN TRỌNG: getUser sẽ kích hoạt refresh token nếu cần)
     const {
         data: { user },
     } = await supabase.auth.getUser()
 
-    // --- PHẦN QUAN TRỌNG: LOGIC BẢO MẬT & PHÂN QUYỀN ---
+    // 4. Định nghĩa các Rules Redirect
     const path = request.nextUrl.pathname
+
+    // --- Helper để Redirect mà KHÔNG LÀM MẤT COOKIE (Fix lỗi Mobile Session) ---
+    const redirectWithCookies = (newPath: string) => {
+        const url = request.nextUrl.clone()
+        url.pathname = newPath
+
+        // Nếu user bị đá về login từ trang bảo vệ, lưu lại trang đích vào ?next=
+        if (newPath === '/login' && !path.startsWith('/login')) {
+            url.searchParams.set('next', path)
+        }
+
+        const newResponse = NextResponse.redirect(url)
+
+        // COPY Cookies từ supabaseResponse (chứa session mới) sang response redirect
+        const cookiesToSet = supabaseResponse.cookies.getAll()
+        cookiesToSet.forEach(cookie => {
+            newResponse.cookies.set(cookie.name, cookie.value)
+        })
+
+        return newResponse
+    }
 
     // A. BẢO VỆ TRANG ADMIN (/admin)
     if (path.startsWith('/admin')) {
-        // Nếu chưa đăng nhập -> Đá về Login
-        if (!user) {
-            const url = request.nextUrl.clone()
-            url.pathname = '/login'
-            return NextResponse.redirect(url)
-        }
+        if (!user) return redirectWithCookies('/login')
 
-        // Nếu đã đăng nhập nhưng KHÔNG PHẢI EMAIL ADMIN -> Đá về trang chủ
-        // Thay đổi email này thành email của chính bạn
         if (user.email !== 'toan.pbsg@gmail.com') {
-            const url = request.nextUrl.clone()
-            url.pathname = '/'
-            return NextResponse.redirect(url)
+            return redirectWithCookies('/')
         }
     }
 
     // B. BẢO VỆ TRANG CÁ NHÂN (/profile, /my-applications...)
-    // Những trang này bắt buộc phải đăng nhập mới được xem
     if (path.startsWith('/profile') || path.startsWith('/my-applications') || path.startsWith('/dashboard')) {
-        if (!user) {
-            const url = request.nextUrl.clone()
-            url.pathname = '/login'
-            return NextResponse.redirect(url)
-        }
+        if (!user) return redirectWithCookies('/login')
     }
 
     // C. CHẶN USER ĐÃ LOGIN VÀO LẠI TRANG AUTH (/login, /register)
     if (path.startsWith('/login') || path.startsWith('/register') || path.startsWith('/forgot-password')) {
-        if (user) {
-            const url = request.nextUrl.clone()
-            url.pathname = '/' // Nếu đã login rồi thì về trang chủ luôn
-            return NextResponse.redirect(url)
-        }
+        if (user) return redirectWithCookies('/')
     }
 
+    // Trả về response mặc định (đã set cookie nếu có refresh)
     return supabaseResponse
 }
