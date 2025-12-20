@@ -23,7 +23,9 @@ import { Input } from '@/components/ui/input'
 import Link from 'next/link'
 import { format, isWithinInterval, parseISO } from 'date-fns'
 import { vi } from 'date-fns/locale'
-import { createClient } from '@/utils/supabase/client' // Import Supabase Client
+import { createClient } from '@/utils/supabase/client'
+import { useRouter } from 'next/navigation'
+import { toast } from 'react-hot-toast'
 
 import {
     DropdownMenu,
@@ -40,23 +42,34 @@ import {
 } from "@/components/ui/popover"
 import { cn } from "@/lib/utils"
 
+import {
+    AlertDialog,
+    AlertDialogAction,
+    AlertDialogCancel,
+    AlertDialogContent,
+    AlertDialogDescription,
+    AlertDialogFooter,
+    AlertDialogHeader,
+    AlertDialogTitle,
+} from "@/components/ui/alert-dialog"
+
 import ArkCalendar, { DateRange } from '@/components/ui/ark-calendar'
 
 type ApplicationStatus = 'pending' | 'interview' | 'rejected' | 'offered'
 
 interface Application {
     id: string
+    jobId: string
     jobTitle: string
     company: string
     location: string
-    appliedDate: string // Lưu dạng string cho dễ hiển thị
-    rawDate: string // Lưu dạng gốc để so sánh ngày
+    appliedDate: string
+    rawDate: string
     status: ApplicationStatus
     logoInitial: string
     logoColor: string
 }
 
-// Hàm helper để tạo màu ngẫu nhiên cho đẹp
 const getRandomColor = (char: string) => {
     const colors = ['bg-blue-600', 'bg-indigo-600', 'bg-purple-600', 'bg-green-600', 'bg-red-500', 'bg-orange-500'];
     const index = char.charCodeAt(0) % colors.length;
@@ -80,13 +93,17 @@ const StatusBadge = ({ status }: { status: ApplicationStatus }) => {
 
 export default function MyApplicationsPage() {
     const supabase = createClient()
+    const router = useRouter()
     const [applications, setApplications] = useState<Application[]>([])
     const [isLoading, setIsLoading] = useState(true)
     const [filterStatus, setFilterStatus] = useState<string>('all')
     const [searchQuery, setSearchQuery] = useState('')
     const [date, setDate] = useState<DateRange>({ start: undefined, end: undefined })
 
-    // 1. Fetch Dữ liệu thật từ Supabase
+    // Alert Dialog State
+    const [selectedAppId, setSelectedAppId] = useState<string | null>(null)
+    const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false)
+
     useEffect(() => {
         const fetchApplications = async () => {
             setIsLoading(true)
@@ -94,7 +111,6 @@ export default function MyApplicationsPage() {
                 const { data: { user } } = await supabase.auth.getUser()
                 if (!user) return
 
-                // Query bảng applications và join với bảng jobs
                 const { data, error } = await supabase
                     .from('applications')
                     .select(`
@@ -102,6 +118,7 @@ export default function MyApplicationsPage() {
                         status,
                         created_at,
                         jobs (
+                            id,
                             title,
                             location
                         )
@@ -112,13 +129,14 @@ export default function MyApplicationsPage() {
                 if (error) throw error
 
                 if (data) {
-                    // Map dữ liệu từ DB sang định dạng hiển thị
                     const mappedData: Application[] = data.map((item: any) => {
                         const jobTitle = item.jobs?.title || 'Công việc không xác định'
+                        const jobId = item.jobs?.id || ''
                         return {
                             id: item.id,
+                            jobId: jobId,
                             jobTitle: jobTitle,
-                            company: 'Công ty Tuyển dụng', // Tạm thời để hardcode vì bảng jobs chưa có cột company
+                            company: 'Công ty Tuyển dụng',
                             location: item.jobs?.location || 'Remote',
                             appliedDate: format(new Date(item.created_at), 'dd/MM/yyyy'),
                             rawDate: item.created_at,
@@ -139,43 +157,52 @@ export default function MyApplicationsPage() {
         fetchApplications()
     }, [supabase])
 
-    // 2. Hàm Xóa (Rút hồ sơ) - Đã sửa lỗi "Xóa giả"
-    const handleWithdraw = async (id: string, jobTitle: string) => {
-        if (!window.confirm(`Bạn có chắc chắn muốn rút hồ sơ vị trí "${jobTitle}" không?`)) return;
+    // Mở Modal xác nhận xóa
+    const handleWithdrawClick = (id: string) => {
+        setSelectedAppId(id)
+        setIsDeleteDialogOpen(true)
+    }
+
+    // Thực hiện xóa sau khi xác nhận
+    const confirmWithdraw = async () => {
+        if (!selectedAppId) return
 
         try {
-            // Lấy user hiện tại để đảm bảo bảo mật
             const { data: { user } } = await supabase.auth.getUser()
-            if (!user) return;
+            if (!user) return
 
-            // Gọi API Xóa của Supabase
             const { error } = await supabase
                 .from('applications')
                 .delete()
-                .eq('id', id)
-                .eq('user_id', user.id) // Rất quan trọng: Chỉ xóa nếu đúng là đơn của user này
+                .eq('id', selectedAppId)
+                .eq('user_id', user.id)
 
             if (error) {
                 console.error("Lỗi Supabase:", error)
-                alert("Lỗi: " + error.message)
+                toast.error("Lỗi: " + error.message)
                 return
             }
 
-            // Nếu xóa thành công trên Server, mới cập nhật giao diện
-            setApplications((prev) => prev.filter((app) => app.id !== id))
-            alert("Đã rút hồ sơ thành công!")
+            setApplications((prev) => prev.filter((app) => app.id !== selectedAppId))
+            toast.success("Đã rút hồ sơ thành công!")
 
         } catch (error) {
             console.error("Lỗi hệ thống:", error)
-            alert("Có lỗi xảy ra, vui lòng thử lại.")
+            toast.error("Có lỗi xảy ra, vui lòng thử lại.")
+        } finally {
+            setIsDeleteDialogOpen(false)
+            setSelectedAppId(null)
         }
     }
 
-    const handleViewDetails = (jobTitle: string) => {
-        alert(`Tính năng đang phát triển cho: ${jobTitle}`)
+    const handleViewDetails = (jobId: string) => {
+        if (jobId) {
+            router.push(`/jobs/${jobId}`)
+        } else {
+            toast.error("Không tìm thấy thông tin công việc này.")
+        }
     }
 
-    // Logic lọc dữ liệu (Giữ nguyên logic của bạn nhưng sửa phần parse ngày)
     const filteredApplications = applications.filter((app) => {
         const matchesStatus = filterStatus === 'all' || app.status === filterStatus
         const matchesSearch =
@@ -185,11 +212,9 @@ export default function MyApplicationsPage() {
         let matchesDate = true
         if (date.start) {
             try {
-                // Dùng rawDate (ISO string) để parse chính xác hơn
                 const appliedDateObj = new Date(app.rawDate)
 
                 if (!date.end) {
-                    // So sánh cùng ngày (bỏ qua giờ phút)
                     matchesDate = format(appliedDateObj, 'dd/MM/yyyy') === format(date.start, 'dd/MM/yyyy')
                 } else {
                     matchesDate = isWithinInterval(appliedDateObj, {
@@ -232,7 +257,6 @@ export default function MyApplicationsPage() {
                         />
                     </div>
 
-                    {/* --- LỊCH ARK UI --- */}
                     <Popover>
                         <PopoverTrigger asChild>
                             <Button
@@ -297,7 +321,7 @@ export default function MyApplicationsPage() {
 
                             <div className="flex-1 min-w-0 space-y-1">
                                 <div className="flex items-center gap-2">
-                                    <Link href="#" onClick={(e) => { e.preventDefault(); handleViewDetails(app.jobTitle); }} className="font-semibold text-lg text-gray-900 hover:text-blue-600 transition-colors truncate block">
+                                    <Link href={`/jobs/${app.jobId}`} onClick={(e) => { e.preventDefault(); handleViewDetails(app.jobId); }} className="font-semibold text-lg text-gray-900 hover:text-blue-600 transition-colors truncate block">
                                         {app.jobTitle}
                                     </Link>
                                 </div>
@@ -333,14 +357,14 @@ export default function MyApplicationsPage() {
 
                                         <DropdownMenuItem
                                             className="cursor-pointer"
-                                            onClick={() => handleViewDetails(app.jobTitle)}
+                                            onClick={() => handleViewDetails(app.jobId)}
                                         >
                                             <Eye className="mr-2 h-4 w-4" /> Xem chi tiết
                                         </DropdownMenuItem>
 
                                         <DropdownMenuItem
                                             className="cursor-pointer text-red-600 focus:text-red-600 focus:bg-red-50"
-                                            onClick={() => handleWithdraw(app.id, app.jobTitle)}
+                                            onClick={() => handleWithdrawClick(app.id)}
                                         >
                                             <Trash2 className="mr-2 h-4 w-4" /> Rút hồ sơ
                                         </DropdownMenuItem>
@@ -368,6 +392,23 @@ export default function MyApplicationsPage() {
                     </div>
                 )}
             </div>
+
+            <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
+                <AlertDialogContent>
+                    <AlertDialogHeader>
+                        <AlertDialogTitle>Xác nhận rút hồ sơ?</AlertDialogTitle>
+                        <AlertDialogDescription>
+                            Hành động này không thể hoàn tác. Bạn có chắc chắn muốn rút hồ sơ ứng tuyển khỏi vị trí này không?
+                        </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                        <AlertDialogCancel>Hủy bỏ</AlertDialogCancel>
+                        <AlertDialogAction onClick={confirmWithdraw} className="bg-red-600 hover:bg-red-700">
+                            Rút hồ sơ
+                        </AlertDialogAction>
+                    </AlertDialogFooter>
+                </AlertDialogContent>
+            </AlertDialog>
         </div>
     )
 }
