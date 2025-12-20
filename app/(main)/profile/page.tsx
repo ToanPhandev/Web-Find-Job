@@ -3,7 +3,6 @@
 import React, { useEffect, useState } from 'react'
 import {
     Briefcase,
-    Download,
     Edit2,
     FileText,
     GraduationCap,
@@ -12,7 +11,9 @@ import {
     Phone,
     Loader2,
     Save,
-    X
+    X,
+    Plus,
+    Trash2
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -20,8 +21,19 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
 import { createClient } from '@/utils/supabase/client'
-// Đã xóa import use-toast bị lỗi
 import CVUpload from '@/components/cv_upload'
+
+// Định nghĩa kiểu dữ liệu cho Education và Project
+interface EducationItem {
+    school: string;
+    major: string;
+    years: string;
+}
+
+interface ProjectItem {
+    name: string;
+    desc: string;
+}
 
 export default function ProfilePage() {
     const supabase = createClient()
@@ -36,10 +48,16 @@ export default function ProfilePage() {
         full_name: '',
         phone: '',
         address: '',
-        university: '',
+        university: '', // Trường chính hiển thị ở Header
         bio: '',
-        avatar_url: ''
+        avatar_url: '',
+        skills: [] as string[], // Mảng các kỹ năng
+        education: [] as EducationItem[], // Mảng JSON học vấn
+        projects: [] as ProjectItem[] // Mảng JSON dự án
     })
+
+    // State tạm dùng để nhập skills dạng chuỗi (vd: "React, Node")
+    const [skillsInput, setSkillsInput] = useState('')
 
     // 1. Fetch Data
     useEffect(() => {
@@ -52,19 +70,14 @@ export default function ProfilePage() {
 
                 setUserEmail(user.email || '')
 
-                // Lấy profile từ bảng profiles
                 const { data, error } = await supabase
                     .from('profiles')
                     .select('*')
                     .eq('id', user.id)
                     .single()
 
-                if (error) {
-                    // Nếu lỗi là "Không tìm thấy dòng nào" (PGRST116) -> User cũ chưa có profile
-                    // Thì bỏ qua lỗi này, để form trống cho người dùng nhập
-                    if (error.code !== 'PGRST116') {
-                        throw error
-                    }
+                if (error && error.code !== 'PGRST116') {
+                    throw error
                 }
 
                 if (data) {
@@ -74,8 +87,13 @@ export default function ProfilePage() {
                         address: data.address || '',
                         university: data.university || '',
                         bio: data.bio || '',
-                        avatar_url: data.avatar_url || ''
+                        avatar_url: data.avatar_url || '',
+                        skills: data.skills || [],
+                        education: Array.isArray(data.education) ? data.education : [],
+                        projects: Array.isArray(data.projects) ? data.projects : []
                     })
+                    // Chuyển mảng skills thành chuỗi để hiển thị trong ô input khi edit
+                    setSkillsInput((data.skills || []).join(', '))
                 }
             } catch (error) {
                 console.error('Error fetching profile:', error)
@@ -87,32 +105,76 @@ export default function ProfilePage() {
         fetchProfile()
     }, [supabase])
 
-    // 2. Handle Input Change
+    // 2. Handle Basic Input Change
     const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
         const { name, value } = e.target
         setProfile(prev => ({ ...prev, [name]: value }))
     }
 
-    // 3. Save Data (Dùng upsert để User cũ vẫn lưu được)
+    // --- Xử lý Logic Array (Education/Projects) ---
+
+    // Thay đổi nội dung trong mảng Education
+    const handleEducationChange = (index: number, field: keyof EducationItem, value: string) => {
+        const newEdu = [...profile.education]
+        newEdu[index][field] = value
+        setProfile(prev => ({ ...prev, education: newEdu }))
+    }
+    // Thêm trường học mới
+    const addEducation = () => {
+        setProfile(prev => ({
+            ...prev,
+            education: [...prev.education, { school: '', major: '', years: '' }]
+        }))
+    }
+    // Xóa trường học
+    const removeEducation = (index: number) => {
+        const newEdu = profile.education.filter((_, i) => i !== index)
+        setProfile(prev => ({ ...prev, education: newEdu }))
+    }
+
+    // Tương tự cho Projects
+    const handleProjectChange = (index: number, field: keyof ProjectItem, value: string) => {
+        const newProj = [...profile.projects]
+        newProj[index][field] = value
+        setProfile(prev => ({ ...prev, projects: newProj }))
+    }
+    const addProject = () => {
+        setProfile(prev => ({
+            ...prev,
+            projects: [...prev.projects, { name: '', desc: '' }]
+        }))
+    }
+    const removeProject = (index: number) => {
+        const newProj = profile.projects.filter((_, i) => i !== index)
+        setProfile(prev => ({ ...prev, projects: newProj }))
+    }
+
+    // 3. Save Data
     const handleSave = async () => {
         setSaving(true)
         try {
             const { data: { user } } = await supabase.auth.getUser()
             if (!user) throw new Error('No user')
 
+            // Xử lý skills từ chuỗi input -> mảng
+            const skillArray = skillsInput
+                .split(',')
+                .map(s => s.trim())
+                .filter(s => s.length > 0)
+
             const updates = {
-                id: user.id, // Bắt buộc có ID để upsert biết dòng nào
+                id: user.id,
                 ...profile,
+                skills: skillArray,
                 updated_at: new Date().toISOString(),
             }
 
-            // Dùng upsert: Có rồi thì update, chưa có thì insert
             const { error } = await supabase.from('profiles').upsert(updates)
 
             if (error) throw error
 
+            setProfile(prev => ({ ...prev, skills: skillArray }))
             setIsEditing(false)
-            // Hiển thị thông báo bằng alert mặc định
             alert("Cập nhật hồ sơ thành công!")
 
         } catch (error) {
@@ -132,7 +194,7 @@ export default function ProfilePage() {
     }
 
     return (
-        <div className="max-w-6xl mx-auto space-y-6">
+        <div className="max-w-6xl mx-auto space-y-6 pb-10">
             {/* Header Section */}
             <div className="bg-white rounded-xl shadow-sm p-6 sm:p-8">
                 <div className="flex flex-col sm:flex-row items-center sm:items-start gap-6">
@@ -145,19 +207,19 @@ export default function ProfilePage() {
 
                     <div className="flex-1 text-center sm:text-left space-y-2 w-full">
                         {isEditing ? (
-                            <div className="grid gap-4 max-w-md">
+                            <div className="grid gap-3 max-w-md">
                                 <Input
                                     name="full_name"
                                     value={profile.full_name}
                                     onChange={handleChange}
                                     placeholder="Họ và tên"
-                                    className="text-lg font-bold"
+                                    className="font-bold"
                                 />
                                 <Input
                                     name="university"
                                     value={profile.university}
                                     onChange={handleChange}
-                                    placeholder="Trường Đại học / Chuyên ngành"
+                                    placeholder="Tiêu đề chính (VD: Sinh viên CNTT...)"
                                 />
                             </div>
                         ) : (
@@ -166,7 +228,7 @@ export default function ProfilePage() {
                                     {profile.full_name || 'Chưa cập nhật tên'}
                                 </h1>
                                 <p className="text-blue-600 font-medium text-lg">
-                                    {profile.university || 'Sinh viên CNTT (Software Engineering)'}
+                                    {profile.university || 'Chức danh / Chuyên ngành...'}
                                 </p>
                             </>
                         )}
@@ -246,71 +308,159 @@ export default function ProfilePage() {
                                 name="bio"
                                 value={profile.bio}
                                 onChange={handleChange}
-                                placeholder="Viết vài dòng giới thiệu về bản thân, mục tiêu nghề nghiệp..."
+                                placeholder="Viết vài dòng giới thiệu về bản thân..."
                                 rows={5}
                             />
                         ) : (
                             <p className="text-gray-600 leading-relaxed whitespace-pre-wrap">
-                                {profile.bio || 'Chưa có thông tin giới thiệu. Hãy bấm chỉnh sửa để cập nhật hồ sơ của bạn ấn tượng hơn với nhà tuyển dụng.'}
+                                {profile.bio || 'Chưa có thông tin giới thiệu.'}
                             </p>
                         )}
                     </div>
 
-                    {/* Education */}
+                    {/* Education - Có tính năng lặp và thêm sửa xóa */}
                     <div className="bg-white rounded-xl shadow-sm p-6">
-                        <h2 className="text-xl font-bold text-gray-900 mb-6 flex items-center gap-2">
-                            <span className="p-2 bg-green-100 rounded-lg text-green-600">
-                                <GraduationCap className="size-5" />
-                            </span>
-                            Học vấn
-                        </h2>
+                        <div className="flex justify-between items-center mb-6">
+                            <h2 className="text-xl font-bold text-gray-900 flex items-center gap-2">
+                                <span className="p-2 bg-green-100 rounded-lg text-green-600">
+                                    <GraduationCap className="size-5" />
+                                </span>
+                                Học vấn
+                            </h2>
+                            {isEditing && (
+                                <Button size="sm" variant="outline" onClick={addEducation}>
+                                    <Plus className="size-4 mr-1" /> Thêm
+                                </Button>
+                            )}
+                        </div>
+
                         <div className="relative border-l-2 border-gray-100 ml-3 space-y-8 pl-8 pb-2">
-                            <div className="relative">
-                                <span className="absolute -left-[39px] top-1 h-5 w-5 rounded-full border-4 border-white bg-blue-600 shadow-sm" />
-                                <h3 className="text-lg font-semibold text-gray-900">{profile.university || 'Trường Đại học...'}</h3>
-                                <p className="text-blue-600 font-medium">Chuyên ngành chính</p>
-                                <p className="text-sm text-gray-500 mt-1">2021 - 2025 (Dự kiến)</p>
-                            </div>
+                            {profile.education.length === 0 && <p className="text-gray-400 italic">Chưa cập nhật học vấn.</p>}
+
+                            {profile.education.map((item, index) => (
+                                <div key={index} className="relative group">
+                                    <span className="absolute -left-[39px] top-1 h-5 w-5 rounded-full border-4 border-white bg-blue-600 shadow-sm" />
+                                    {isEditing ? (
+                                        <div className="space-y-2 p-3 border rounded-lg bg-gray-50">
+                                            <div className="flex justify-between">
+                                                <h4 className="text-sm font-semibold text-gray-500">Trường học #{index + 1}</h4>
+                                                <button onClick={() => removeEducation(index)} className="text-red-500 hover:text-red-700">
+                                                    <Trash2 className="size-4" />
+                                                </button>
+                                            </div>
+                                            <Input
+                                                placeholder="Tên trường (VD: Đại học FPT)"
+                                                value={item.school}
+                                                onChange={(e) => handleEducationChange(index, 'school', e.target.value)}
+                                            />
+                                            <Input
+                                                placeholder="Chuyên ngành"
+                                                value={item.major}
+                                                onChange={(e) => handleEducationChange(index, 'major', e.target.value)}
+                                            />
+                                            <Input
+                                                placeholder="Niên khóa (VD: 2021 - 2025)"
+                                                value={item.years}
+                                                onChange={(e) => handleEducationChange(index, 'years', e.target.value)}
+                                            />
+                                        </div>
+                                    ) : (
+                                        <div>
+                                            <h3 className="text-lg font-semibold text-gray-900">{item.school}</h3>
+                                            <p className="text-blue-600 font-medium">{item.major}</p>
+                                            <p className="text-sm text-gray-500 mt-1">{item.years}</p>
+                                        </div>
+                                    )}
+                                </div>
+                            ))}
                         </div>
                     </div>
 
-                    {/* Projects (Tĩnh - Chưa chỉnh sửa được) */}
+                    {/* Projects - Có tính năng lặp và thêm sửa xóa */}
                     <div className="bg-white rounded-xl shadow-sm p-6">
-                        <h2 className="text-xl font-bold text-gray-900 mb-6 flex items-center gap-2">
-                            <span className="p-2 bg-purple-100 rounded-lg text-purple-600">
-                                <Briefcase className="size-5" />
-                            </span>
-                            Dự án nổi bật
-                        </h2>
+                        <div className="flex justify-between items-center mb-6">
+                            <h2 className="text-xl font-bold text-gray-900 flex items-center gap-2">
+                                <span className="p-2 bg-purple-100 rounded-lg text-purple-600">
+                                    <Briefcase className="size-5" />
+                                </span>
+                                Dự án nổi bật
+                            </h2>
+                            {isEditing && (
+                                <Button size="sm" variant="outline" onClick={addProject}>
+                                    <Plus className="size-4 mr-1" /> Thêm
+                                </Button>
+                            )}
+                        </div>
+
                         <div className="space-y-4">
-                            <div className="border border-gray-100 rounded-lg p-4 hover:border-blue-200 transition-colors">
-                                <div className="flex justify-between items-start mb-2">
-                                    <h3 className="font-semibold text-gray-900 text-lg">Hệ thống Tìm Việc Làm (Job Board)</h3>
-                                    <Badge variant="secondary" className="bg-green-100 text-green-700">Đang phát triển</Badge>
+                            {profile.projects.length === 0 && <p className="text-gray-400 italic">Chưa cập nhật dự án.</p>}
+
+                            {profile.projects.map((item, index) => (
+                                <div key={index} className="border border-gray-100 rounded-lg p-4 hover:border-blue-200 transition-colors">
+                                    {isEditing ? (
+                                        <div className="space-y-2">
+                                            <div className="flex justify-between">
+                                                <h4 className="text-sm font-semibold text-gray-500">Dự án #{index + 1}</h4>
+                                                <button onClick={() => removeProject(index)} className="text-red-500 hover:text-red-700">
+                                                    <Trash2 className="size-4" />
+                                                </button>
+                                            </div>
+                                            <Input
+                                                placeholder="Tên dự án"
+                                                value={item.name}
+                                                onChange={(e) => handleProjectChange(index, 'name', e.target.value)}
+                                                className="font-semibold"
+                                            />
+                                            <Textarea
+                                                placeholder="Mô tả dự án, công nghệ sử dụng..."
+                                                value={item.desc}
+                                                onChange={(e) => handleProjectChange(index, 'desc', e.target.value)}
+                                                rows={2}
+                                            />
+                                        </div>
+                                    ) : (
+                                        <>
+                                            <div className="flex justify-between items-start mb-2">
+                                                <h3 className="font-semibold text-gray-900 text-lg">{item.name}</h3>
+                                            </div>
+                                            <p className="text-sm text-gray-600 leading-relaxed">
+                                                {item.desc}
+                                            </p>
+                                        </>
+                                    )}
                                 </div>
-                                <p className="text-sm text-gray-600 mb-3">
-                                    Xây dựng nền tảng kết nối sinh viên và nhà tuyển dụng với Next.js 15 và Supabase.
-                                </p>
-                            </div>
+                            ))}
                         </div>
                     </div>
                 </div>
 
                 {/* Right Column (Sidebar) */}
                 <div className="space-y-6">
-                    {/* CV/Resume Upload */}
+                    {/* CV Upload Component */}
                     <CVUpload />
 
                     {/* Skills */}
                     <div className="bg-white rounded-xl shadow-sm p-6">
                         <h2 className="font-bold text-gray-900 mb-4">Kỹ năng</h2>
-                        <div className="flex flex-wrap gap-2">
-                            {['React', 'Next.js', 'TypeScript', 'Tailwind CSS'].map((skill) => (
-                                <Badge key={skill} variant="secondary" className="bg-gray-100 text-gray-700">
-                                    {skill}
-                                </Badge>
-                            ))}
-                        </div>
+                        {isEditing ? (
+                            <div className="space-y-2">
+                                <Textarea
+                                    value={skillsInput}
+                                    onChange={(e) => setSkillsInput(e.target.value)}
+                                    placeholder="Nhập kỹ năng ngăn cách bằng dấu phẩy. VD: React, Node.js, SQL"
+                                />
+                                <p className="text-xs text-gray-500">Ngăn cách bằng dấu phẩy</p>
+                            </div>
+                        ) : (
+                            <div className="flex flex-wrap gap-2">
+                                {profile.skills.length === 0 && <span className="text-sm text-gray-500">Chưa có kỹ năng.</span>}
+                                {profile.skills.map((skill, index) => (
+                                    <Badge key={index} variant="secondary" className="bg-gray-100 text-gray-700">
+                                        {skill}
+                                    </Badge>
+                                ))}
+                            </div>
+                        )}
                     </div>
                 </div>
             </div>

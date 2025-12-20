@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import {
     Building2,
     Calendar as CalendarIcon,
@@ -14,14 +14,16 @@ import {
     Eye,
     Trash2,
     ClipboardList,
-    X
+    X,
+    Loader2
 } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import Link from 'next/link'
-import { format, isWithinInterval, parse } from 'date-fns'
+import { format, isWithinInterval, parseISO } from 'date-fns'
 import { vi } from 'date-fns/locale'
+import { createClient } from '@/utils/supabase/client' // Import Supabase Client
 
 import {
     DropdownMenu,
@@ -38,7 +40,6 @@ import {
 } from "@/components/ui/popover"
 import { cn } from "@/lib/utils"
 
-// Import Component lịch mới
 import ArkCalendar, { DateRange } from '@/components/ui/ark-calendar'
 
 type ApplicationStatus = 'pending' | 'interview' | 'rejected' | 'offered'
@@ -48,54 +49,19 @@ interface Application {
     jobTitle: string
     company: string
     location: string
-    appliedDate: string
+    appliedDate: string // Lưu dạng string cho dễ hiển thị
+    rawDate: string // Lưu dạng gốc để so sánh ngày
     status: ApplicationStatus
     logoInitial: string
     logoColor: string
 }
 
-const INITIAL_DATA: Application[] = [
-    {
-        id: '1',
-        jobTitle: 'Senior Frontend Developer',
-        company: 'TechCorp Solutions',
-        location: 'TP. Hồ Chí Minh (Hybrid)',
-        appliedDate: format(new Date(), 'dd/MM/yyyy'), // Ngày hôm nay
-        status: 'interview',
-        logoInitial: 'T',
-        logoColor: 'bg-blue-600',
-    },
-    {
-        id: '2',
-        jobTitle: 'React Native Engineer',
-        company: 'MobileOne',
-        location: 'Hà Nội',
-        appliedDate: '10/12/2025',
-        status: 'pending',
-        logoInitial: 'M',
-        logoColor: 'bg-indigo-600',
-    },
-    {
-        id: '3',
-        jobTitle: 'Fullstack Developer (Next.js)',
-        company: 'Global Systems',
-        location: 'Remote',
-        appliedDate: '01/12/2025',
-        status: 'rejected',
-        logoInitial: 'G',
-        logoColor: 'bg-gray-700',
-    },
-    {
-        id: '4',
-        jobTitle: 'Intern Backend GoLang',
-        company: 'StartupX',
-        location: 'Đà Nẵng',
-        appliedDate: '20/11/2025',
-        status: 'offered',
-        logoInitial: 'S',
-        logoColor: 'bg-green-600',
-    },
-]
+// Hàm helper để tạo màu ngẫu nhiên cho đẹp
+const getRandomColor = (char: string) => {
+    const colors = ['bg-blue-600', 'bg-indigo-600', 'bg-purple-600', 'bg-green-600', 'bg-red-500', 'bg-orange-500'];
+    const index = char.charCodeAt(0) % colors.length;
+    return colors[index];
+}
 
 const StatusBadge = ({ status }: { status: ApplicationStatus }) => {
     switch (status) {
@@ -113,22 +79,103 @@ const StatusBadge = ({ status }: { status: ApplicationStatus }) => {
 }
 
 export default function MyApplicationsPage() {
-    const [applications, setApplications] = useState<Application[]>(INITIAL_DATA)
+    const supabase = createClient()
+    const [applications, setApplications] = useState<Application[]>([])
+    const [isLoading, setIsLoading] = useState(true)
     const [filterStatus, setFilterStatus] = useState<string>('all')
     const [searchQuery, setSearchQuery] = useState('')
     const [date, setDate] = useState<DateRange>({ start: undefined, end: undefined })
 
-    const handleWithdraw = (id: string, jobTitle: string) => {
-        if (window.confirm(`Bạn có chắc chắn muốn rút hồ sơ vị trí "${jobTitle}" không?`)) {
+    // 1. Fetch Dữ liệu thật từ Supabase
+    useEffect(() => {
+        const fetchApplications = async () => {
+            setIsLoading(true)
+            try {
+                const { data: { user } } = await supabase.auth.getUser()
+                if (!user) return
+
+                // Query bảng applications và join với bảng jobs
+                const { data, error } = await supabase
+                    .from('applications')
+                    .select(`
+                        id,
+                        status,
+                        created_at,
+                        jobs (
+                            title,
+                            location
+                        )
+                    `)
+                    .eq('user_id', user.id)
+                    .order('created_at', { ascending: false })
+
+                if (error) throw error
+
+                if (data) {
+                    // Map dữ liệu từ DB sang định dạng hiển thị
+                    const mappedData: Application[] = data.map((item: any) => {
+                        const jobTitle = item.jobs?.title || 'Công việc không xác định'
+                        return {
+                            id: item.id,
+                            jobTitle: jobTitle,
+                            company: 'Công ty Tuyển dụng', // Tạm thời để hardcode vì bảng jobs chưa có cột company
+                            location: item.jobs?.location || 'Remote',
+                            appliedDate: format(new Date(item.created_at), 'dd/MM/yyyy'),
+                            rawDate: item.created_at,
+                            status: item.status as ApplicationStatus,
+                            logoInitial: jobTitle.charAt(0).toUpperCase(),
+                            logoColor: getRandomColor(jobTitle)
+                        }
+                    })
+                    setApplications(mappedData)
+                }
+            } catch (error) {
+                console.error("Lỗi tải dữ liệu:", error)
+            } finally {
+                setIsLoading(false)
+            }
+        }
+
+        fetchApplications()
+    }, [supabase])
+
+    // 2. Hàm Xóa (Rút hồ sơ) - Đã sửa lỗi "Xóa giả"
+    const handleWithdraw = async (id: string, jobTitle: string) => {
+        if (!window.confirm(`Bạn có chắc chắn muốn rút hồ sơ vị trí "${jobTitle}" không?`)) return;
+
+        try {
+            // Lấy user hiện tại để đảm bảo bảo mật
+            const { data: { user } } = await supabase.auth.getUser()
+            if (!user) return;
+
+            // Gọi API Xóa của Supabase
+            const { error } = await supabase
+                .from('applications')
+                .delete()
+                .eq('id', id)
+                .eq('user_id', user.id) // Rất quan trọng: Chỉ xóa nếu đúng là đơn của user này
+
+            if (error) {
+                console.error("Lỗi Supabase:", error)
+                alert("Lỗi: " + error.message)
+                return
+            }
+
+            // Nếu xóa thành công trên Server, mới cập nhật giao diện
             setApplications((prev) => prev.filter((app) => app.id !== id))
             alert("Đã rút hồ sơ thành công!")
+
+        } catch (error) {
+            console.error("Lỗi hệ thống:", error)
+            alert("Có lỗi xảy ra, vui lòng thử lại.")
         }
     }
 
     const handleViewDetails = (jobTitle: string) => {
-        alert(`Đang chuyển hướng đến chi tiết: ${jobTitle}`)
+        alert(`Tính năng đang phát triển cho: ${jobTitle}`)
     }
 
+    // Logic lọc dữ liệu (Giữ nguyên logic của bạn nhưng sửa phần parse ngày)
     const filteredApplications = applications.filter((app) => {
         const matchesStatus = filterStatus === 'all' || app.status === filterStatus
         const matchesSearch =
@@ -137,29 +184,34 @@ export default function MyApplicationsPage() {
 
         let matchesDate = true
         if (date.start) {
-            // Parse ngày ứng tuyển (dd/MM/yyyy) sang Date object để so sánh range
             try {
-                const appliedDateObj = parse(app.appliedDate, 'dd/MM/yyyy', new Date())
+                // Dùng rawDate (ISO string) để parse chính xác hơn
+                const appliedDateObj = new Date(app.rawDate)
 
-                // 1. Chỉ có Start Date -> Tìm chính xác ngày đó
                 if (!date.end) {
-                    matchesDate = app.appliedDate === format(date.start, 'dd/MM/yyyy')
-                }
-                // 2. Có cả Start và End -> Tìm trong khoảng (Inclusive)
-                else {
+                    // So sánh cùng ngày (bỏ qua giờ phút)
+                    matchesDate = format(appliedDateObj, 'dd/MM/yyyy') === format(date.start, 'dd/MM/yyyy')
+                } else {
                     matchesDate = isWithinInterval(appliedDateObj, {
                         start: date.start,
                         end: date.end
                     })
                 }
             } catch (e) {
-                console.error("Date parse error", e)
                 matchesDate = false
             }
         }
 
         return matchesStatus && matchesSearch && matchesDate
     })
+
+    if (isLoading) {
+        return (
+            <div className="flex h-[50vh] items-center justify-center">
+                <Loader2 className="h-8 w-8 animate-spin text-blue-600" />
+            </div>
+        )
+    }
 
     return (
         <div className="max-w-5xl mx-auto space-y-8">
@@ -187,7 +239,7 @@ export default function MyApplicationsPage() {
                                 variant={"outline"}
                                 className={cn(
                                     "w-full sm:w-[240px] justify-start text-left font-normal bg-white",
-                                    !date && "text-muted-foreground"
+                                    !date.start && "text-muted-foreground"
                                 )}
                             >
                                 <CalendarIcon className="mr-2 h-4 w-4" />
@@ -202,7 +254,6 @@ export default function MyApplicationsPage() {
                                 )}
                             </Button>
                         </PopoverTrigger>
-                        {/* QUAN TRỌNG: Thêm pointer-events-auto để cho phép click */}
                         <PopoverContent
                             className="w-auto p-0 border-none shadow-none bg-transparent pointer-events-auto"
                             align="end"
@@ -305,11 +356,11 @@ export default function MyApplicationsPage() {
                         </div>
                         <h3 className="text-lg font-semibold text-gray-900">Không tìm thấy đơn ứng tuyển nào</h3>
                         <p className="mt-2 text-sm text-gray-500 max-w-sm mx-auto">
-                            {searchQuery || filterStatus !== 'all' || date
+                            {searchQuery || filterStatus !== 'all' || date.start
                                 ? "Thử thay đổi bộ lọc ngày tháng hoặc từ khóa tìm kiếm."
                                 : "Danh sách ứng tuyển đang trống."}
                         </p>
-                        {(!searchQuery && filterStatus === 'all' && !date) && (
+                        {(!searchQuery && filterStatus === 'all' && !date.start) && (
                             <Button className="mt-6 bg-blue-600 hover:bg-blue-700" asChild>
                                 <Link href="/">Tìm việc ngay</Link>
                             </Button>
