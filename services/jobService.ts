@@ -98,3 +98,54 @@ export const getJobById = async (id: string): Promise<Job | null> => {
         return null;
     }
 };
+
+export interface JobFilters {
+    query?: string;
+    location?: string;
+    jobType?: string;
+}
+
+export const filterJobs = async (filters: JobFilters): Promise<Job[]> => {
+    try {
+        let queryBuilder = supabase
+            .from('jobs')
+            .select('*')
+            .eq('status', 'active')
+            .order('created_at', { ascending: false });
+
+        if (filters.query) {
+            queryBuilder = queryBuilder.ilike('title', `%${filters.query}%`);
+        }
+
+        if (filters.location && filters.location !== 'all') {
+            queryBuilder = queryBuilder.ilike('location', `%${filters.location}%`);
+        }
+
+        if (filters.jobType && filters.jobType !== 'all') {
+            queryBuilder = queryBuilder.eq('job_type', filters.jobType);
+        }
+
+        const { data, error } = await queryBuilder;
+
+        if (error) {
+            console.error('Error filtering jobs:', error);
+            return [];
+        }
+
+        return (data as any[]).map((item) => ({
+            id: item.id,
+            title: item.title,
+            company: item.company,
+            location: item.location,
+            salary_range: item.salary_range,
+            job_type: item.job_type,
+            tags: item.tags || [],
+            description: item.description,
+            requirements: item.requirements,
+            created_at: item.created_at,
+        }));
+    } catch (error) {
+        console.error('Unexpected error in filterJobs:', error);
+        return [];
+    }
+};

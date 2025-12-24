@@ -61,7 +61,14 @@ export default function Navbar() {
                     <div className="hidden sm:flex sm:items-center sm:space-x-4">
                         {user ? (
                             <>
-
+                                {!isAdminPage && (
+                                    <Link
+                                        href="/my-applications"
+                                        className="text-gray-500 hover:text-blue-600 px-3 py-2 rounded-md text-sm font-medium transition-colors"
+                                    >
+                                        Việc đã ứng tuyển
+                                    </Link>
+                                )}
 
                                 {user.email === ADMIN_EMAIL && (
                                     <Button variant="ghost" asChild className="text-blue-600 hover:text-blue-700 hover:bg-blue-50">
@@ -128,65 +135,67 @@ export default function Navbar() {
             </div>
 
             {/* Mobile Menu */}
-            {isMenuOpen && (
-                <div className="sm:hidden bg-white border-t border-gray-100">
-                    <div className="pt-2 pb-3 space-y-1 px-4">
-                        {user ? (
-                            <>
+            {
+                isMenuOpen && (
+                    <div className="sm:hidden bg-white border-t border-gray-100">
+                        <div className="pt-2 pb-3 space-y-1 px-4">
+                            {user ? (
+                                <>
 
 
-                                {user.email === ADMIN_EMAIL && (
-                                    isAdminPage ? (
-                                        <Link
-                                            href="/"
-                                            className="flex items-center w-full text-left text-base font-medium text-blue-600 hover:text-blue-700 hover:bg-blue-50 px-3 py-2 rounded-md"
-                                            onClick={() => setIsMenuOpen(false)}
+                                    {user.email === ADMIN_EMAIL && (
+                                        isAdminPage ? (
+                                            <Link
+                                                href="/"
+                                                className="flex items-center w-full text-left text-base font-medium text-blue-600 hover:text-blue-700 hover:bg-blue-50 px-3 py-2 rounded-md"
+                                                onClick={() => setIsMenuOpen(false)}
+                                            >
+                                                <Home className="mr-2 h-4 w-4" />
+                                                Về Trang Chủ
+                                            </Link>
+                                        ) : (
+                                            <Link
+                                                href="/admin"
+                                                className="flex items-center w-full text-left text-base font-medium text-blue-600 hover:text-blue-700 hover:bg-blue-50 px-3 py-2 rounded-md"
+                                                onClick={() => setIsMenuOpen(false)}
+                                            >
+                                                <LayoutDashboard className="mr-2 h-4 w-4" />
+                                                Trang Quản Trị
+                                            </Link>
+                                        )
+                                    )}
+
+                                    {!isAdminPage && (
+                                        <button
+                                            onClick={handleLogout}
+                                            className="block w-full text-left text-base font-medium text-gray-500 hover:text-red-600 hover:bg-gray-50 px-3 py-2 rounded-md"
                                         >
-                                            <Home className="mr-2 h-4 w-4" />
-                                            Về Trang Chủ
-                                        </Link>
-                                    ) : (
-                                        <Link
-                                            href="/admin"
-                                            className="flex items-center w-full text-left text-base font-medium text-blue-600 hover:text-blue-700 hover:bg-blue-50 px-3 py-2 rounded-md"
-                                            onClick={() => setIsMenuOpen(false)}
-                                        >
-                                            <LayoutDashboard className="mr-2 h-4 w-4" />
-                                            Trang Quản Trị
-                                        </Link>
-                                    )
-                                )}
-
-                                {!isAdminPage && (
-                                    <button
-                                        onClick={handleLogout}
-                                        className="block w-full text-left text-base font-medium text-gray-500 hover:text-red-600 hover:bg-gray-50 px-3 py-2 rounded-md"
+                                            Đăng xuất
+                                        </button>
+                                    )}
+                                </>
+                            ) : (
+                                <>
+                                    <Link
+                                        href="/login"
+                                        className="block text-base font-medium text-gray-600 hover:text-blue-600 hover:bg-gray-50 px-3 py-2 rounded-md"
+                                        onClick={() => setIsMenuOpen(false)}
                                     >
-                                        Đăng xuất
-                                    </button>
-                                )}
-                            </>
-                        ) : (
-                            <>
-                                <Link
-                                    href="/login"
-                                    className="block text-base font-medium text-gray-600 hover:text-blue-600 hover:bg-gray-50 px-3 py-2 rounded-md"
-                                    onClick={() => setIsMenuOpen(false)}
-                                >
-                                    Đăng nhập
-                                </Link>
-                                <Link
-                                    href="/post-job"
-                                    className="block text-base font-medium text-blue-600 hover:text-blue-700 hover:bg-blue-50 px-3 py-2 rounded-md"
-                                    onClick={() => setIsMenuOpen(false)}
-                                >
-                                    Đăng tin
-                                </Link>
-                            </>
-                        )}
+                                        Đăng nhập
+                                    </Link>
+                                    <Link
+                                        href="/post-job"
+                                        className="block text-base font-medium text-blue-600 hover:text-blue-700 hover:bg-blue-50 px-3 py-2 rounded-md"
+                                        onClick={() => setIsMenuOpen(false)}
+                                    >
+                                        Đăng tin
+                                    </Link>
+                                </>
+                            )}
+                        </div>
                     </div>
-                </div>
-            )}
-        </nav>
+                )
+            }
+        </nav >
     );
 }

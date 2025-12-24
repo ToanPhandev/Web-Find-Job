@@ -15,7 +15,8 @@ import {
     Trash2,
     ClipboardList,
     X,
-    Loader2
+    Loader2,
+    FileText
 } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -66,6 +67,7 @@ interface Application {
     appliedDate: string
     rawDate: string
     status: ApplicationStatus
+    cvUrl: string
     logoInitial: string
     logoColor: string
 }
@@ -81,7 +83,7 @@ const StatusBadge = ({ status }: { status: ApplicationStatus }) => {
         case 'pending':
             return <Badge variant="secondary" className="bg-yellow-100 text-yellow-700 hover:bg-yellow-100 gap-1.5 px-3 py-1"><Clock className="size-3.5" /> Đang chờ</Badge>
         case 'interview':
-            return <Badge variant="secondary" className="bg-blue-100 text-blue-700 hover:bg-blue-100 gap-1.5 px-3 py-1"><CalendarIcon className="size-3.5" /> Phỏng vấn</Badge>
+            return <Badge variant="secondary" className="bg-purple-100 text-purple-700 hover:bg-purple-100 gap-1.5 px-3 py-1"><CalendarIcon className="size-3.5" /> Phỏng vấn</Badge>
         case 'offered':
             return <Badge variant="secondary" className="bg-green-100 text-green-700 hover:bg-green-100 gap-1.5 px-3 py-1"><CheckCircle className="size-3.5" /> Đã nhận</Badge>
         case 'rejected':
@@ -117,6 +119,7 @@ export default function MyApplicationsPage() {
                         id,
                         status,
                         created_at,
+                        cv_url,
                         jobs (
                             id,
                             title,
@@ -141,6 +144,7 @@ export default function MyApplicationsPage() {
                             appliedDate: format(new Date(item.created_at), 'dd/MM/yyyy'),
                             rawDate: item.created_at,
                             status: item.status as ApplicationStatus,
+                            cvUrl: item.cv_url,
                             logoInitial: jobTitle.charAt(0).toUpperCase(),
                             logoColor: getRandomColor(jobTitle)
                         }
@@ -339,6 +343,12 @@ export default function MyApplicationsPage() {
                                         <CalendarDays className="size-3.5" />
                                         <span>Ngày nộp: {app.appliedDate}</span>
                                     </div>
+                                    {app.cvUrl && (
+                                        <div className="flex items-center gap-1.5 text-blue-600 hover:underline">
+                                            <FileText className="size-3.5" />
+                                            <Link href={app.cvUrl} target="_blank">Xem hồ sơ đã nộp (CV)</Link>
+                                        </div>
+                                    )}
                                 </div>
                             </div>
 
