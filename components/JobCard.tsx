@@ -17,7 +17,7 @@ const JobCard: React.FC<JobCardProps> = ({ job }) => {
                     <p className="text-gray-600 font-medium">{job.company}</p>
                 </div>
                 <span className="text-green-600 font-bold bg-green-50 px-3 py-1 rounded-full text-sm whitespace-nowrap">
-                    {job.salary}
+                    {job.salary_range}
                 </span>
             </div>
 

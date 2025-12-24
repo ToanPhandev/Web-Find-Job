@@ -25,10 +25,9 @@ export default function JobApplicationPage() {
     const [fullname, setFullname] = useState('');
     const [email, setEmail] = useState('');
     const [phone, setPhone] = useState('');
-    const [coverLetter, setCoverLetter] = useState('');
     const [cvMethod, setCvMethod] = useState<'existing' | 'upload'>('upload');
-    const [selectedCv, setSelectedCv] = useState<string>(''); // ID if existing
-    const [selectedCvUrl, setSelectedCvUrl] = useState<string>(''); // URL if existing
+    const [selectedCv, setSelectedCv] = useState<string>('');
+    const [selectedCvUrl, setSelectedCvUrl] = useState<string>('');
     const [cvFile, setCvFile] = useState<File | null>(null);
 
     // UI States
@@ -43,20 +42,26 @@ export default function JobApplicationPage() {
                 const { data: { user } } = await supabase.auth.getUser();
                 if (!user) {
                     setIsLoading(false);
-                    return; // Or redirect to login
+                    return;
                 }
 
-                setEmail(user.email || '');
+                // Default values from Auth
+                const authEmail = user.email || '';
+                const authName = user.user_metadata?.full_name || '';
 
-                // A. Get Profile Info
+                setEmail(authEmail);
+                setFullname(authName);
+
+                // --- SỬA Ở ĐÂY: Lấy đúng cột 'full_name' trong bảng profiles ---
                 const { data: profile } = await supabase
                     .from('profiles')
-                    .select('full_name, phone')
+                    .select('full_name, phone') // Sửa từ 'fullname' thành 'full_name'
                     .eq('id', user.id)
-                    .single();
+                    .maybeSingle();
 
                 if (profile) {
-                    setFullname(profile.full_name || '');
+                    // Ưu tiên lấy tên từ Profile (full_name), nếu không có thì lấy từ Auth
+                    setFullname(profile.full_name || authName);
                     setPhone(profile.phone || '');
                 }
 
@@ -83,8 +88,8 @@ export default function JobApplicationPage() {
                         };
                     });
                     setExistingCVs(mappedFiles);
-                    setCvMethod('existing'); // Default to existing if available
-                    setSelectedCv(mappedFiles[0].id); // Auto-select latest
+                    setCvMethod('existing');
+                    setSelectedCv(mappedFiles[0].id);
                     setSelectedCvUrl(mappedFiles[0].url);
                 }
 
@@ -100,6 +105,11 @@ export default function JobApplicationPage() {
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
+
+        if (!id) {
+            toast.error('Không tìm thấy thông tin công việc!');
+            return;
+        }
 
         let finalCvUrl = '';
 
@@ -124,7 +134,9 @@ export default function JobApplicationPage() {
 
             // 1. Handle Upload if needed
             if (cvMethod === 'upload' && cvFile) {
-                const fileName = `${user.id}/${Date.now()}_${cvFile.name.replace(/[^a-zA-Z0-9.-]/g, '_')}`;
+                // Tên file: user_id/timestamp_cleanName
+                const cleanName = cvFile.name.replace(/[^a-zA-Z0-9.-]/g, '_');
+                const fileName = `${user.id}/${Date.now()}_${cleanName}`;
 
                 const { error: uploadError } = await supabase.storage
                     .from('resumes')
@@ -139,6 +151,7 @@ export default function JobApplicationPage() {
                 finalCvUrl = publicUrl;
 
                 // Optional: Save to profiles table as latest CV
+                // Lưu ý: Update bảng profiles dùng 'cv_url' và 'cv_name' (theo schema của bạn)
                 await supabase.from('profiles').update({
                     cv_url: publicUrl,
                     cv_name: cvFile.name
@@ -146,16 +159,16 @@ export default function JobApplicationPage() {
             }
 
             // 2. Submit Application
+            // Lưu ý: Bảng applications dùng 'fullname' (không gạch dưới) - Cái này bạn đã đúng
             const { error: insertError } = await supabase
                 .from('applications')
                 .insert([
                     {
-                        job_id: Number(id),
-                        user_id: user.id, // Explicitly linking user
-                        fullname,
+                        job_id: id, // ID lấy từ URL là string, Supabase UUID cũng là string nên để nguyên
+                        user_id: user.id,
+                        fullname: fullname, // Map state fullname vào cột fullname
                         email,
                         phone,
-                        cover_letter: coverLetter,
                         cv_url: finalCvUrl,
                         status: 'pending',
                     },
@@ -255,7 +268,7 @@ export default function JobApplicationPage() {
                                     onChange={(e) => setEmail(e.target.value)}
                                     className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 bg-gray-100 cursor-not-allowed"
                                     placeholder="example@email.com"
-                                    readOnly // Usually email shouldn't change for the same user account context easily
+                                    readOnly
                                 />
                             </div>
                         </div>
@@ -366,22 +379,6 @@ export default function JobApplicationPage() {
                                     </div>
                                 </div>
                             )}
-                        </div>
-
-                        {/* Cover Letter */}
-                        <div>
-                            <label htmlFor="coverLetter" className="block text-sm font-medium text-gray-700 mb-1">
-                                Thư giới thiệu (Cover Letter)
-                            </label>
-                            <textarea
-                                id="coverLetter"
-                                rows={4}
-                                value={coverLetter}
-                                onChange={(e) => setCoverLetter(e.target.value)}
-                                className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
-                                placeholder="Hãy viết đôi lời giới thiệu về bản thân và lý do bạn phù hợp với vị trí này..."
-                                disabled={isSubmitting}
-                            />
                         </div>
 
                         {/* Actions */}

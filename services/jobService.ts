@@ -8,7 +8,7 @@ export const getJobs = async (): Promise<Job[]> => {
         const { data, error } = await supabase
             .from('jobs')
             .select('*')
-            .eq('is_active', true)
+            .eq('status', 'active')
             .order('created_at', { ascending: false });
 
         if (error) {
@@ -21,9 +21,11 @@ export const getJobs = async (): Promise<Job[]> => {
             title: item.title,
             company: item.company,
             location: item.location,
-            salary: item.salary,
+            salary_range: item.salary_range,
+            job_type: item.job_type,
             tags: item.tags || [],
             description: item.description,
+            requirements: item.requirements,
             created_at: item.created_at,
         }));
     } catch (error) {
@@ -37,7 +39,7 @@ export const searchJobs = async (query: string): Promise<Job[]> => {
         const { data, error } = await supabase
             .from('jobs')
             .select('*')
-            .eq('is_active', true)
+            .eq('status', 'active')
             .or(`title.ilike.%${query}%,tags.cs.{${query}}`)
             .order('created_at', { ascending: false });
 
@@ -51,9 +53,11 @@ export const searchJobs = async (query: string): Promise<Job[]> => {
             title: item.title,
             company: item.company,
             location: item.location,
-            salary: item.salary,
+            salary_range: item.salary_range,
+            job_type: item.job_type,
             tags: item.tags || [],
             description: item.description,
+            requirements: item.requirements,
             created_at: item.created_at,
         }));
     } catch (error) {
@@ -62,7 +66,7 @@ export const searchJobs = async (query: string): Promise<Job[]> => {
     }
 };
 
-export const getJobById = async (id: number): Promise<Job | null> => {
+export const getJobById = async (id: string): Promise<Job | null> => {
     try {
         const { data, error } = await supabase
             .from('jobs')
@@ -82,9 +86,11 @@ export const getJobById = async (id: number): Promise<Job | null> => {
             title: data.title,
             company: data.company,
             location: data.location,
-            salary: data.salary,
+            salary_range: data.salary_range,
+            job_type: data.job_type,
             tags: data.tags || [],
             description: data.description,
+            requirements: data.requirements,
             created_at: data.created_at,
         };
     } catch (error) {

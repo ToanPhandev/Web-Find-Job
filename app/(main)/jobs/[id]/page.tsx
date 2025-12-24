@@ -9,7 +9,7 @@ interface PageProps {
 
 export default async function JobDetailPage({ params }: PageProps) {
     const { id } = await params;
-    const job = await getJobById(Number(id));
+    const job = await getJobById(String(id));
 
     if (!job) {
         return (
@@ -117,8 +117,13 @@ export default async function JobDetailPage({ params }: PageProps) {
                                 {job.location}
                             </span>
                             <span className="text-green-600 font-bold bg-green-50 px-3 py-1 rounded-full text-sm">
-                                {job.salary}
+                                {job.salary_range || 'Thỏa thuận'}
                             </span>
+                            {job.job_type && (
+                                <span className="text-purple-600 font-bold bg-purple-50 px-3 py-1 rounded-full text-sm">
+                                    {job.job_type}
+                                </span>
+                            )}
                         </div>
                     </div>
 
@@ -137,14 +142,28 @@ export default async function JobDetailPage({ params }: PageProps) {
 
             {/* Content */}
             <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-                <div className="bg-white rounded-lg shadow-sm p-6 sm:p-8">
+                <div className="bg-white rounded-lg shadow-sm p-6 sm:p-8 space-y-8">
                     <AIJobAnalyzer description={job.description} />
-                    <h3 className="text-xl font-bold text-gray-900 mb-4 border-b pb-2">
-                        Mô tả công việc
-                    </h3>
-                    <div className="prose max-w-none text-gray-700 whitespace-pre-line leading-relaxed">
-                        {job.description}
+
+                    <div>
+                        <h3 className="text-xl font-bold text-gray-900 mb-4 border-b pb-2">
+                            Mô tả công việc
+                        </h3>
+                        <div className="prose max-w-none text-gray-700 whitespace-pre-line leading-relaxed">
+                            {job.description}
+                        </div>
                     </div>
+
+                    {job.requirements && (
+                        <div>
+                            <h3 className="text-xl font-bold text-gray-900 mb-4 border-b pb-2">
+                                Yêu cầu công việc
+                            </h3>
+                            <div className="prose max-w-none text-gray-700 whitespace-pre-line leading-relaxed">
+                                {job.requirements}
+                            </div>
+                        </div>
+                    )}
                 </div>
             </div>
 
@@ -163,6 +182,6 @@ export default async function JobDetailPage({ params }: PageProps) {
                     </Link>
                 </div>
             </div>
-        </main>
+        </main >
     );
 }

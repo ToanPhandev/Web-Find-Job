@@ -1,11 +1,7 @@
-'use client';
+'use client'
 
-import React, { useEffect, useState } from 'react';
-import Link from 'next/link';
-import { adminService } from '@/services/adminService';
-import { Application, ApplicationStatus } from '@/types/application';
-import { Eye, FileText, Loader2 } from 'lucide-react';
-
+import React, { useEffect, useState } from 'react'
+import { createClient } from '@/utils/supabase/client'
 import {
     Table,
     TableBody,
@@ -13,189 +9,190 @@ import {
     TableHead,
     TableHeader,
     TableRow,
-} from '@/components/ui/table';
-import {
-    Card,
-    CardContent,
-    CardDescription,
-    CardHeader,
-    CardTitle,
-} from '@/components/ui/card';
+} from '@/components/ui/table'
 import {
     Select,
     SelectContent,
     SelectItem,
     SelectTrigger,
     SelectValue,
-} from '@/components/ui/select';
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
+} from "@/components/ui/select"
+import { Button } from '@/components/ui/button'
+import { Loader2, FileText, ExternalLink } from 'lucide-react'
+import { format } from 'date-fns'
+import { toast } from 'react-hot-toast'
+import Link from 'next/link'
+
+interface Application {
+    id: string
+    fullname: string
+    email: string
+    cv_url: string
+    created_at: string
+    status: string
+    jobs: {
+        title: string
+    } | null
+}
+
+const STATUS_OPTIONS = [
+    { value: 'pending', label: 'Đang chờ', color: 'text-yellow-600 bg-yellow-50 border-yellow-200' },
+    { value: 'reviewed', label: 'Đã xem', color: 'text-blue-600 bg-blue-50 border-blue-200' },
+    { value: 'interview', label: 'Phỏng vấn', color: 'text-purple-600 bg-purple-50 border-purple-200' },
+    { value: 'hired', label: 'Đã tuyển', color: 'text-green-600 bg-green-50 border-green-200' },
+    { value: 'rejected', label: 'Từ chối', color: 'text-red-600 bg-red-50 border-red-200' },
+]
 
 export default function AdminApplicationsPage() {
-    const [applications, setApplications] = useState<Application[]>([]);
-    const [loading, setLoading] = useState(true);
+    const supabase = createClient()
+    const [applications, setApplications] = useState<Application[]>([])
+    const [isLoading, setIsLoading] = useState(true)
 
     useEffect(() => {
-        fetchApplications();
-    }, []);
+        fetchApplications()
+    }, [])
 
     const fetchApplications = async () => {
         try {
-            setLoading(true);
-            const data = await adminService.getAllApplications();
-            setApplications(data);
-        } catch (err) {
-            console.error(err);
+            const { data, error } = await supabase
+                .from('applications')
+                .select(`
+                    *,
+                    jobs (
+                        title
+                    )
+                `)
+                .order('created_at', { ascending: false })
+
+            if (error) throw error
+
+            if (data) {
+                setApplications(data as Application[])
+            }
+        } catch (error: any) {
+            console.error('Error fetching applications:', error)
+            toast.error('Không thể tải danh sách đơn ứng tuyển')
         } finally {
-            setLoading(false);
+            setIsLoading(false)
         }
-    };
+    }
 
-    const handleStatusChange = async (id: string, newStatus: ApplicationStatus) => {
+    const handleStatusChange = async (id: string, newStatus: string) => {
+        // Optimistic update (Cập nhật giao diện ngay lập tức)
+        setApplications(prev => prev.map(app =>
+            app.id === id ? { ...app, status: newStatus } : app
+        ))
+
         try {
-            // Optimistic update
-            setApplications((prev) =>
-                prev.map((app) =>
-                    app.id === id ? { ...app, status: newStatus } : app
-                )
-            );
-            await adminService.updateApplicationStatus(id, newStatus);
-        } catch (err) {
-            console.error(err);
-            fetchApplications(); // Revert on error
+            const { error } = await supabase
+                .from('applications')
+                .update({ status: newStatus })
+                .eq('id', id)
+
+            if (error) throw error
+
+            toast.success('Đã cập nhật trạng thái')
+        } catch (error: any) {
+            console.error('Error updating status:', error)
+            toast.error('Cập nhật thất bại: ' + error.message)
+            // Revert on error (hoặc fetch lại data)
+            fetchApplications()
         }
-    };
+    }
 
-    const getStatusBadgeVariant = (status: ApplicationStatus) => {
-        switch (status) {
-            case 'pending':
-                return 'secondary'; // Yellow-ish usually, or customize
-            case 'interview':
-                return 'default'; // Blue/Primary
-            case 'rejected':
-                return 'destructive'; // Red
-            case 'offer':
-                return 'outline'; // Green usually needs custom class or variant
-            default:
-                return 'secondary';
-        }
-    };
-
-    // Custom styling for Badge colors to match request exactly if variants aren't enough
-    const getBadgeClassName = (status: ApplicationStatus) => {
-        switch (status) {
-            case 'pending':
-                return 'bg-yellow-100 text-yellow-800 hover:bg-yellow-100 border-yellow-200';
-            case 'interview':
-                return 'bg-blue-100 text-blue-800 hover:bg-blue-100 border-blue-200';
-            case 'rejected':
-                return 'bg-red-100 text-red-800 hover:bg-red-100 border-red-200';
-            case 'offer':
-                return 'bg-green-100 text-green-800 hover:bg-green-100 border-green-200';
-            default:
-                return '';
-        }
-    };
-
-    const formatDate = (dateString: string) => {
-        return new Intl.DateTimeFormat('vi-VN', {
-            day: '2-digit',
-            month: '2-digit',
-            year: 'numeric',
-        }).format(new Date(dateString));
-    };
-
-    if (loading) {
-        return (
-            <div className="flex items-center justify-center min-h-[400px]">
-                <Loader2 className="h-8 w-8 animate-spin text-blue-600" />
-            </div>
-        );
+    const getStatusColorClass = (status: string) => {
+        const option = STATUS_OPTIONS.find(o => o.value === status)
+        return option ? option.color : 'text-gray-600 bg-gray-50 border-gray-200'
     }
 
     return (
-        <div className="p-6">
-            <Card>
-                <CardHeader>
-                    <CardTitle className="text-2xl font-bold">Quản lý đơn ứng tuyển</CardTitle>
-                    <CardDescription>
-                        Danh sách tất cả các ứng viên đã nộp hồ sơ vào hệ thống.
-                    </CardDescription>
-                </CardHeader>
-                <CardContent>
-                    <div className="rounded-md border">
-                        <Table>
-                            <TableHeader>
-                                <TableRow>
-                                    <TableHead className="w-[250px]">Ứng viên</TableHead>
-                                    <TableHead>Vị trí</TableHead>
-                                    <TableHead>Ngày nộp</TableHead>
-                                    <TableHead>CV</TableHead>
-                                    <TableHead className="w-[250px]">Trạng thái</TableHead>
-                                </TableRow>
-                            </TableHeader>
-                            <TableBody>
-                                {applications.length === 0 ? (
-                                    <TableRow>
-                                        <TableCell colSpan={5} className="text-center py-10 text-muted-foreground">
-                                            Chưa có đơn ứng tuyển nào.
-                                        </TableCell>
-                                    </TableRow>
-                                ) : (
-                                    applications.map((app) => (
-                                        <TableRow key={app.id}>
-                                            <TableCell>
-                                                <div className="flex flex-col">
-                                                    <span className="font-bold text-gray-900">{app.fullname}</span>
-                                                    <span className="text-sm text-muted-foreground">{app.email}</span>
-                                                </div>
-                                            </TableCell>
-                                            <TableCell>
-                                                <span className="font-medium text-blue-600">
-                                                    {app.jobs?.title || 'Unknown Job'}
-                                                </span>
-                                            </TableCell>
-                                            <TableCell>{formatDate(app.created_at)}</TableCell>
-                                            <TableCell>
-                                                <Button variant="outline" size="sm" asChild>
-                                                    <Link href={app.cv_url} target="_blank">
-                                                        <FileText className="mr-2 h-4 w-4" />
-                                                        Xem CV
-                                                    </Link>
-                                                </Button>
-                                            </TableCell>
-                                            <TableCell>
-                                                <div className="flex items-center gap-3">
-                                                    <Badge className={getBadgeClassName(app.status)} variant="outline">
-                                                        {app.status.charAt(0).toUpperCase() + app.status.slice(1)}
-                                                    </Badge>
+        <div className="space-y-6">
+            <div>
+                <h1 className="text-3xl font-bold tracking-tight text-gray-900">Quản lý đơn ứng tuyển</h1>
+                <p className="text-gray-500 mt-2">Xem và quản lý tất cả các hồ sơ ứng viên gửi về hệ thống.</p>
+            </div>
 
-                                                    <Select
-                                                        value={app.status}
-                                                        onValueChange={(value) =>
-                                                            handleStatusChange(app.id, value as ApplicationStatus)
-                                                        }
-                                                    >
-                                                        <SelectTrigger className="w-[130px] h-8">
-                                                            <SelectValue placeholder="Status" />
-                                                        </SelectTrigger>
-                                                        <SelectContent>
-                                                            <SelectItem value="pending">Pending</SelectItem>
-                                                            <SelectItem value="interview">Interview</SelectItem>
-                                                            <SelectItem value="offer">Offer</SelectItem>
-                                                            <SelectItem value="rejected">Rejected</SelectItem>
-                                                        </SelectContent>
-                                                    </Select>
-                                                </div>
-                                            </TableCell>
-                                        </TableRow>
-                                    ))
-                                )}
-                            </TableBody>
-                        </Table>
-                    </div>
-                </CardContent>
-            </Card>
+            <div className="bg-white border rounded-lg shadow-sm">
+                <Table>
+                    <TableHeader>
+                        <TableRow className="bg-gray-50/50">
+                            <TableHead className="w-[250px]">Ứng viên</TableHead>
+                            <TableHead className="min-w-[200px]">Vị trí ứng tuyển</TableHead>
+                            <TableHead className="w-[100px] text-center">CV</TableHead>
+                            <TableHead className="w-[120px] text-center whitespace-nowrap">Ngày nộp</TableHead>
+                            <TableHead className="w-[180px] text-center">Trạng thái</TableHead>
+                        </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                        {isLoading ? (
+                            <TableRow>
+                                <TableCell colSpan={5} className="h-24 text-center">
+                                    <div className="flex justify-center items-center gap-2">
+                                        <Loader2 className="h-6 w-6 animate-spin text-blue-600" />
+                                        <span className="text-gray-500">Đang tải dữ liệu...</span>
+                                    </div>
+                                </TableCell>
+                            </TableRow>
+                        ) : applications.length === 0 ? (
+                            <TableRow>
+                                <TableCell colSpan={5} className="h-24 text-center text-gray-500">
+                                    Chưa có đơn ứng tuyển nào.
+                                </TableCell>
+                            </TableRow>
+                        ) : (
+                            applications.map((app) => (
+                                <TableRow key={app.id} className="hover:bg-gray-50/50 transition-colors">
+                                    <TableCell>
+                                        <div className="flex flex-col">
+                                            <span className="font-semibold text-gray-900">{app.fullname || 'N/A'}</span>
+                                            <span className="text-sm text-gray-500">{app.email}</span>
+                                        </div>
+                                    </TableCell>
+                                    <TableCell>
+                                        <span className="font-medium text-blue-700 bg-blue-50 px-2 py-1 rounded-md text-xs">
+                                            {app.jobs?.title || 'Job Deleted'}
+                                        </span>
+                                    </TableCell>
+                                    <TableCell className="text-center">
+                                        {app.cv_url ? (
+                                            <Button variant="outline" size="sm" asChild className="gap-2 h-8">
+                                                <Link href={app.cv_url} target="_blank">
+                                                    <FileText className="h-3.5 w-3.5" />
+                                                    <span>Xem CV</span>
+                                                </Link>
+                                            </Button>
+                                        ) : (
+                                            <span className="text-gray-400 italic text-sm">Không có file</span>
+                                        )}
+                                    </TableCell>
+                                    <TableCell className="text-gray-600 text-center whitespace-nowrap">
+                                        {format(new Date(app.created_at), 'dd/MM/yyyy')}
+                                    </TableCell>
+                                    <TableCell className="text-center">
+                                        <Select
+                                            value={app.status || 'pending'}
+                                            onValueChange={(value) => handleStatusChange(app.id, value)}
+                                        >
+                                            <SelectTrigger
+                                                className={`h-9 w-full ${getStatusColorClass(app.status || 'pending')} focus:ring-0 focus:ring-offset-0 font-medium`}
+                                            >
+                                                <SelectValue />
+                                            </SelectTrigger>
+                                            <SelectContent>
+                                                {STATUS_OPTIONS.map((option) => (
+                                                    <SelectItem key={option.value} value={option.value}>
+                                                        {option.label}
+                                                    </SelectItem>
+                                                ))}
+                                            </SelectContent>
+                                        </Select>
+                                    </TableCell>
+                                </TableRow>
+                            ))
+                        )}
+                    </TableBody>
+                </Table>
+            </div>
         </div>
-    );
+    )
 }
