@@ -1,13 +1,13 @@
 'use client'
 
-import React, { useState, useEffect, useCallback } from 'react'
+import React, { useState, useRef, useEffect } from 'react'
 import { createClient } from '@/utils/supabase/client'
 import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { Loader2, Upload, FileText, CheckCircle, AlertCircle, Eye, Trash2, Maximize2, Minimize2 } from 'lucide-react'
+import { Upload, FileText, Loader2, Trash2, Eye, Calendar, Paperclip, ChevronDown, ChevronUp, ChevronsDown, ChevronsUp } from 'lucide-react'
+import { toast } from 'react-hot-toast'
+import { format } from 'date-fns'
 
-interface CVFile {
-    id: string
+export interface CVFile {
     name: string
     url: string
     created_at: string
@@ -15,354 +15,320 @@ interface CVFile {
 
 export default function CVUpload() {
     const supabase = createClient()
-
-    // States
-    const [file, setFile] = useState<File | null>(null)
-    const [loading, setLoading] = useState(false)
+    const fileInputRef = useRef<HTMLInputElement>(null)
+    const [isUploading, setIsUploading] = useState(false)
+    const [isLoading, setIsLoading] = useState(true)
     const [cvList, setCvList] = useState<CVFile[]>([])
-    const [fetching, setFetching] = useState(true)
-    const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null)
 
-    // State for tracking expanded filenames
-    const [expandedIds, setExpandedIds] = useState<Set<string>>(new Set())
+    // State to track which items are expanded (by index)
+    const [expandedIndices, setExpandedIndices] = useState<Set<number>>(new Set())
 
-    const toggleExpand = (id: string) => {
-        setExpandedIds(prev => {
-            const next = new Set(prev)
-            if (next.has(id)) {
-                next.delete(id)
-            } else {
-                next.add(id)
+    // Fetch existing CVs on mount
+    useEffect(() => {
+        const fetchCVs = async () => {
+            try {
+                const { data: { user } } = await supabase.auth.getUser()
+                if (!user) return
+
+                const { data, error } = await supabase
+                    .from('profiles')
+                    .select('cvs')
+                    .eq('id', user.id)
+                    .single()
+
+                if (error) throw error
+
+                // Ensure data.cvs is an array
+                if (data && Array.isArray(data.cvs)) {
+                    setCvList(data.cvs)
+                } else {
+                    setCvList([])
+                }
+            } catch (error) {
+                console.error('Error fetching CVs:', error)
+                // Don't show toast error here to avoid annoyance on load
+            } finally {
+                setIsLoading(false)
             }
-            return next
-        })
-    }
-
-    // Check if all are expanded
-    const areAllExpanded = cvList.length > 0 && expandedIds.size === cvList.length
-
-    const toggleAll = () => {
-        if (areAllExpanded) {
-            setExpandedIds(new Set())
-        } else {
-            setExpandedIds(new Set(cvList.map(cv => cv.id)))
         }
-    }
 
-    // 1. Fetch List of CVs
-    const fetchCVs = useCallback(async () => {
-        try {
-            setFetching(true)
-            const { data: { user } } = await supabase.auth.getUser()
-            if (!user) return
-
-            // List files in user's folder
-            const { data, error } = await supabase.storage
-                .from('resumes')
-                .list(user.id + '/', {
-                    limit: 10,
-                    offset: 0,
-                    sortBy: { column: 'created_at', order: 'desc' },
-                })
-
-            if (error) throw error
-
-            if (data) {
-                // Map storage files to usable objects
-                const files = data.map((file) => {
-                    const filePath = `${user.id}/${file.name}`
-                    const { data: { publicUrl } } = supabase.storage
-                        .from('resumes')
-                        .getPublicUrl(filePath)
-
-                    return {
-                        id: file.id,
-                        name: file.name,
-                        url: publicUrl,
-                        created_at: file.created_at,
-                    }
-                })
-                setCvList(files)
-            }
-        } catch (error) {
-            console.error('Error fetching CVs:', error)
-        } finally {
-            setFetching(false)
-        }
+        fetchCVs()
     }, [supabase])
 
-    useEffect(() => {
-        fetchCVs()
-    }, [fetchCVs])
-
-    // 2. Handle File Selection
-    const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        const selectedFile = e.target.files?.[0]
-        if (!selectedFile) return
-
-        // Validate PDF
-        if (selectedFile.type !== 'application/pdf') {
-            setMessage({ type: 'error', text: 'Vui lòng chỉ chọn file định dạng .pdf' })
-            setFile(null)
-            return
-        }
-
-        // Validate Size (Optional, e.g., 5MB)
-        if (selectedFile.size > 5 * 1024 * 1024) {
-            setMessage({ type: 'error', text: 'File không được quá 5MB' })
-            setFile(null)
-            return
-        }
-
-        setFile(selectedFile)
-        setMessage(null)
-    }
-
-    // 3. Upload Logic
-    const handleUpload = async () => {
+    const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0]
         if (!file) return
 
-        setLoading(true)
-        setMessage(null)
+        // Validate file type
+        const validTypes = ['application/pdf', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document', 'application/msword']
+        if (!validTypes.includes(file.type)) {
+            toast.error('Vui lòng tải lên file PDF hoặc DOCX')
+            return
+        }
+
+        // Validate file size (max 5MB)
+        if (file.size > 5 * 1024 * 1024) {
+            toast.error('Kích thước file không được vượt quá 5MB')
+            return
+        }
 
         try {
-            // A. Get User
-            const { data: { user }, error: authError } = await supabase.auth.getUser()
-            if (authError || !user) throw new Error("Bạn cần đăng nhập để tải lên CV.")
+            setIsUploading(true)
+            toast.loading('Đang tải lên CV...', { id: 'upload-cv' })
 
-            // B. Prepare Filename: user_id/timestamp_filename.pdf
-            const timestamp = Date.now()
-            // Sanitize filename to remove special chars
-            const safeName = file.name.replace(/[^a-zA-Z0-9.-]/g, '_')
-            const filePath = `${user.id}/${timestamp}_${safeName}`
+            const { data: { user } } = await supabase.auth.getUser()
+            if (!user) throw new Error('User not authenticated')
 
-            // C. Upload to Storage
+            const fileExt = file.name.split('.').pop()
+            // Create a unique filename but try to keep original name part for reference if needed
+            const fileName = `cv-${user.id}-${Date.now()}.${fileExt}`
+            const filePath = `${fileName}`
+
+            // Upload to Storage
             const { error: uploadError } = await supabase.storage
                 .from('resumes')
-                .upload(filePath, file, {
-                    cacheControl: '3600',
-                    upsert: false // Prevent valid overwrites if logic fails, usually we want unique paths
-                })
+                .upload(filePath, file)
 
             if (uploadError) throw uploadError
 
-            // Note: We still update the 'profiles' table with the LATEST CV for other parts of the app to use
-            // D. Get Public URL
-            const { data: { publicUrl } } = supabase.storage
+            // Get Public URL
+            const { data: publicUrlData } = supabase.storage
                 .from('resumes')
                 .getPublicUrl(filePath)
 
-            // E. Update Profile
-            await supabase.from('profiles').update({
-                cv_url: publicUrl,
-                cv_name: file.name
-            }).eq('id', user.id)
+            const publicUrl = publicUrlData.publicUrl
 
-            // Success Update
-            setMessage({ type: 'success', text: 'Tải lên CV thành công!' })
-            setFile(null)
+            // Create new CV object
+            const newCV: CVFile = {
+                name: file.name,
+                url: publicUrl,
+                created_at: new Date().toISOString()
+            }
 
-            // Refresh list
-            fetchCVs()
+            // Update local state
+            const updatedList = [...cvList, newCV]
+            setCvList(updatedList)
 
-            // Reset input value manually if needed, or rely on key prop
+            // Update Database
+            const { error: updateError } = await supabase
+                .from('profiles')
+                .update({ cvs: updatedList })
+                .eq('id', user.id)
+
+            if (updateError) throw updateError
+
+            toast.success('Tải lên CV thành công!', { id: 'upload-cv' })
+
         } catch (error: any) {
-            console.error('CV Upload Error:', error)
-            setMessage({ type: 'error', text: error.message || 'Đã có lỗi xảy ra khi tải lên.' })
+            console.error('Error uploading CV:', error)
+            toast.error('Có lỗi xảy ra khi tải lên CV', { id: 'upload-cv' })
         } finally {
-            setLoading(false)
+            setIsUploading(false)
+            if (fileInputRef.current) {
+                fileInputRef.current.value = ''
+            }
         }
     }
 
-    // 4. Delete Logic
-    const handleDelete = async (fileName: string) => {
-        if (!window.confirm("Bạn có chắc chắn muốn xóa CV này không?")) return
+    const handleDelete = async (index: number) => {
+        if (!confirm('Bạn có chắc chắn muốn xóa CV này không?')) return
 
         try {
             const { data: { user } } = await supabase.auth.getUser()
             if (!user) return
 
-            const filePath = `${user.id}/${fileName}`
+            const updatedList = cvList.filter((_, i) => i !== index)
+            setCvList(updatedList)
 
-            const { error } = await supabase.storage
-                .from('resumes')
-                .remove([filePath])
+            // Also remove from expandedIndices if necessary, though index shift handles naturally for simple usage
+            // Ideally we'd map by ID, but index is simple enough for this scope
 
-            if (error) throw error
+            const { error } = await supabase
+                .from('profiles')
+                .update({ cvs: updatedList })
+                .eq('id', user.id)
 
-            // Update UI optimistically or refetch
-            setCvList(prev => prev.filter(cv => cv.name !== fileName))
-            setMessage({ type: 'success', text: 'Đã xóa CV thành công.' })
+            if (error) {
+                // Revert state if DB update fails
+                setCvList(cvList)
+                throw error
+            }
 
-        } catch (error: any) {
-            console.error('Delete Error:', error)
-            setMessage({ type: 'error', text: 'Không thể xóa file này.' })
+            toast.success('Đã xóa CV thành công')
+
+        } catch (error) {
+            console.error('Error deleting CV:', error)
+            toast.error('Không thể xóa CV')
         }
     }
 
-    return (
-        <div className="w-full max-w-md p-6 bg-white rounded-xl border border-gray-100 shadow-sm space-y-6">
-            <div>
-                <h3 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
-                    <FileText className="size-5 text-blue-600" />
-                    Quản lý CV
-                </h3>
-                <div className="flex flex-col items-start">
-                    <p className="text-sm text-gray-500 mt-1">
-                        Danh sách các hồ sơ bạn đã tải lên.
-                    </p>
-                    {cvList.length > 0 && (
-                        <button
-                            onClick={toggleAll}
-                            className="flex items-center gap-1.5 text-xs text-blue-600 hover:text-blue-700 mt-2 font-medium px-2 py-1 bg-blue-50 hover:bg-blue-100 rounded-md transition-colors"
-                            title={areAllExpanded ? "Thu gọn toàn bộ" : "Hiển thị toàn bộ tên file"}
-                        >
-                            {areAllExpanded ? <Minimize2 className="size-3.5" /> : <Maximize2 className="size-3.5" />}
-                            {areAllExpanded ? "Thu gọn" : "Mở rộng tên"}
-                        </button>
-                    )}
-                </div>
-            </div>
+    const triggerFileInput = () => {
+        fileInputRef.current?.click()
+    }
 
-            {/* List of CVs */}
-            <div className="space-y-3">
-                {fetching ? (
-                    <div className="flex justify-center p-4">
-                        <Loader2 className="w-6 h-6 animate-spin text-blue-600" />
-                    </div>
-                ) : cvList.length > 0 ? (
-                    cvList.map((cv) => (
-                        <div key={cv.id} className="flex items-center justify-between p-3 bg-gray-50 border border-gray-200 rounded-lg group hover:border-blue-200 transition-colors">
-                            <div className="flex items-start gap-3 overflow-hidden flex-1">
-                                <FileText className="size-4 text-blue-600 shrink-0 mt-1" />
-                                <div className="min-w-0 flex-1">
-                                    <div className="flex items-start gap-1">
-                                        <p
-                                            className={`text-sm font-medium text-gray-900 transition-all duration-200 ${expandedIds.has(cv.id)
-                                                ? 'whitespace-normal break-all'
-                                                : 'truncate max-w-[140px]'
-                                                }`}
-                                            title={cv.name}
-                                        >
-                                            {cv.name.split('_').slice(1).join('_') || cv.name}
-                                        </p>
-                                        <button
-                                            onClick={() => toggleExpand(cv.id)}
-                                            className="text-gray-400 hover:text-blue-600 p-0.5 shrink-0"
-                                            title={expandedIds.has(cv.id) ? "Thu gọn tên" : "Xem toàn bộ tên"}
-                                        >
-                                            {expandedIds.has(cv.id) ? (
-                                                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M8 3v3a2 2 0 0 1-2 2H3" /><path d="M21 8h-3a2 2 0 0 1-2-2V3" /><path d="M3 16h3a2 2 0 0 1 2 2v3" /><path d="M16 21v-3a2 2 0 0 1 2-2h3" /></svg>
-                                            ) : (
-                                                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M15 3h6v6" /><path d="M9 21H3v-6" /><path d="M21 3l-7 7" /><path d="M3 21l7-7" /></svg>
-                                            )}
-                                        </button>
-                                    </div>
-                                    <p className="text-xs text-gray-500 mt-0.5">
-                                        {new Date(cv.created_at).toLocaleDateString('vi-VN')}
-                                    </p>
-                                </div>
-                            </div>
-                            <div className="flex items-center gap-2">
-                                <Button variant="ghost" size="icon-sm" asChild className="text-gray-500 hover:text-blue-600 h-8 w-8">
-                                    <a href={cv.url} target="_blank" rel="noopener noreferrer" title="Xem">
-                                        <Eye className="size-4" />
-                                    </a>
-                                </Button>
-                                <Button
-                                    variant="ghost"
-                                    size="icon-sm"
-                                    onClick={() => handleDelete(cv.name)}
-                                    className="text-gray-500 hover:text-red-600 h-8 w-8"
-                                    title="Xóa"
-                                >
-                                    <Trash2 className="size-4" />
-                                </Button>
-                            </div>
-                        </div>
-                    ))
-                ) : (
-                    <div className="text-center py-6 border-2 border-dashed border-gray-100 rounded-lg">
-                        <p className="text-sm text-gray-400">Chưa có CV nào được tải lên.</p>
-                    </div>
+    // Toggle expand/collapse for a single item
+    const toggleExpand = (index: number) => {
+        setExpandedIndices(prev => {
+            const newSet = new Set(prev)
+            if (newSet.has(index)) {
+                newSet.delete(index)
+            } else {
+                newSet.add(index)
+            }
+            return newSet
+        })
+    }
+
+    // Toggle expand/collapse for all items
+    const toggleExpandAll = () => {
+        if (expandedIndices.size === cvList.length && cvList.length > 0) {
+            // Collapse all
+            setExpandedIndices(new Set())
+        } else {
+            // Expand all
+            const allIndices = new Set(cvList.map((_, i) => i))
+            setExpandedIndices(allIndices)
+        }
+    }
+
+    const isAllExpanded = cvList.length > 0 && expandedIndices.size === cvList.length
+
+    if (isLoading) {
+        return (
+            <div className="flex justify-center p-4">
+                <Loader2 className="h-6 w-6 animate-spin text-gray-400" />
+            </div>
+        )
+    }
+
+    return (
+        <div className="w-full space-y-4">
+            <div className="flex items-center justify-between">
+                <h3 className="font-bold text-gray-900 flex items-center gap-2">
+                    <Paperclip className="size-5 text-gray-500" />
+                    Danh sách CV
+                </h3>
+                {cvList.length > 0 && (
+                    <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={toggleExpandAll}
+                        className="text-xs text-blue-600 hover:text-blue-700 hover:bg-blue-50 h-8 px-2"
+                    >
+                        {isAllExpanded ? (
+                            <>
+                                <ChevronsUp className="h-3 w-3 mr-1" /> Thu gọn
+                            </>
+                        ) : (
+                            <>
+                                <ChevronsDown className="h-3 w-3 mr-1" /> Mở rộng
+                            </>
+                        )}
+                    </Button>
                 )}
             </div>
 
-            {/* Message Alert */}
-            {message && (
-                <div className={`p-3 rounded-lg flex items-start gap-2 text-sm ${message.type === 'success' ? 'bg-green-50 text-green-700' : 'bg-red-50 text-red-700'
-                    }`}>
-                    {message.type === 'success' ? (
-                        <CheckCircle className="size-4 mt-0.5 shrink-0" />
-                    ) : (
-                        <AlertCircle className="size-4 mt-0.5 shrink-0" />
-                    )}
-                    <span>{message.text}</span>
-                </div>
-            )}
+            {/* List of uploaded CVs */}
+            <div className="space-y-3">
+                {cvList.length === 0 ? (
+                    <p className="text-sm text-gray-400 italic">Chưa có CV nào được tải lên.</p>
+                ) : (
+                    cvList.map((cv, index) => {
+                        const isExpanded = expandedIndices.has(index)
 
-            {/* Upload Area */}
-            <div className="space-y-3 pt-4 border-t border-gray-100">
-                <div className="group w-full">
-                    <label
-                        htmlFor="cv-upload-input"
-                        className={`flex flex-col items-center justify-center w-full h-32 border-2 border-dashed rounded-lg cursor-pointer hover:bg-gray-50 transition-colors ${file ? 'border-blue-300 bg-blue-50' : 'border-gray-300 bg-white'}`}
-                    >
-                        <div className="flex flex-col items-center justify-center pt-5 pb-6 text-center px-4 w-full">
-                            <Upload className={`w-8 h-8 mb-3 ${file ? 'text-blue-500' : 'text-gray-400'}`} />
-                            {file ? (
-                                <div className="flex flex-col items-center gap-2 max-w-full">
-                                    <p className="text-sm font-medium text-blue-600 truncate max-w-[200px]" title={file.name}>
-                                        {file.name}
-                                    </p>
-                                    <button
-                                        type="button"
-                                        onClick={(e) => {
-                                            e.preventDefault()
-                                            setFile(null)
-                                        }}
-                                        className="p-2 bg-red-50 text-red-500 rounded-md hover:bg-red-100 transition-colors shadow-sm border border-red-100"
-                                        title="Hủy chọn file"
+                        return (
+                            <div key={index} className="bg-white border border-gray-200 rounded-lg p-3 flex items-start justify-between shadow-sm hover:shadow-md transition-shadow group">
+                                <div className="flex items-start space-x-3 overflow-hidden flex-1">
+                                    <div className="bg-blue-50 p-2 rounded-lg mt-0.5">
+                                        <FileText className="h-5 w-5 text-blue-600" />
+                                    </div>
+                                    <div className="min-w-0 flex-1">
+                                        <div className="flex items-start gap-1">
+                                            <p
+                                                className={`text-sm font-medium text-gray-900 transition-all cursor-pointer ${isExpanded ? 'break-all whitespace-normal' : 'truncate'
+                                                    }`}
+                                                onClick={() => toggleExpand(index)}
+                                                title={cv.name}
+                                            >
+                                                {cv.name}
+                                            </p>
+                                            <button
+                                                onClick={() => toggleExpand(index)}
+                                                className="text-gray-400 hover:text-blue-600 p-0.5 rounded-sm transition-colors mt-0.5 shrink-0"
+                                            >
+                                                {isExpanded ? (
+                                                    <ChevronUp className="h-3 w-3" />
+                                                ) : (
+                                                    <ChevronDown className="h-3 w-3" />
+                                                )}
+                                            </button>
+                                        </div>
+                                        <p className="text-xs text-gray-500 flex items-center mt-1">
+                                            <Calendar className="h-3 w-3 mr-1" />
+                                            {format(new Date(cv.created_at), 'dd/MM/yyyy')}
+                                        </p>
+                                    </div>
+                                </div>
+                                <div className="flex items-center space-x-1 shrink-0 ml-2">
+                                    <a
+                                        href={cv.url}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        className="p-2 text-gray-500 hover:text-blue-600 hover:bg-blue-50 rounded-full transition-colors"
+                                        title="Xem CV"
                                     >
-                                        <Trash2 className="size-5" />
+                                        <Eye className="h-4 w-4" />
+                                    </a>
+                                    <button
+                                        onClick={() => handleDelete(index)}
+                                        className="p-2 text-gray-500 hover:text-red-600 hover:bg-red-50 rounded-full transition-colors"
+                                        title="Xóa"
+                                    >
+                                        <Trash2 className="h-4 w-4" />
                                     </button>
                                 </div>
-                            ) : (
-                                <p className="text-sm text-gray-500">
-                                    <span className="font-semibold text-blue-600">Hãy nhấp vào đây</span> để tải File lên
-                                    <br />
-                                    <span className="text-xs text-gray-400">(Không vượt quá 5MB)</span>
-                                </p>
-                            )}
-                        </div>
-                        <Input
-                            id="cv-upload-input"
-                            type="file"
-                            accept=".pdf"
-                            onChange={handleFileChange}
-                            className="hidden"
-                            disabled={loading}
-                        />
-                    </label>
-                </div>
+                            </div>
+                        )
+                    })
+                )}
+            </div>
 
-                <Button
-                    onClick={handleUpload}
-                    disabled={!file || loading}
-                    className="w-full bg-blue-600 hover:bg-blue-700"
+            {/* Upload Dropzone */}
+            <div className="pt-2">
+                <input
+                    type="file"
+                    ref={fileInputRef}
+                    onChange={handleFileSelect}
+                    accept=".pdf,.doc,.docx"
+                    className="hidden"
+                />
+
+                <div
+                    onClick={triggerFileInput}
+                    className={`
+                        border-2 border-dashed rounded-lg p-6 flex flex-col items-center justify-center cursor-pointer transition-colors
+                        ${isUploading ? 'bg-gray-50 border-gray-300' : 'border-gray-300 hover:border-blue-500 hover:bg-blue-50'}
+                    `}
                 >
-                    {loading ? (
+                    {isUploading ? (
                         <>
-                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                            Đang tải lên...
+                            <Loader2 className="h-8 w-8 text-blue-500 animate-spin mb-2" />
+                            <p className="text-sm text-gray-500 text-center">Đang tải lên...</p>
                         </>
                     ) : (
                         <>
-                            <Upload className="mr-2 h-4 w-4" />
-                            Tải lên CV mới
+                            <div className="bg-blue-100 p-3 rounded-full mb-3">
+                                <Upload className="h-6 w-6 text-blue-600" />
+                            </div>
+                            <p className="text-sm font-medium text-gray-900 text-center mb-1">
+                                Tải lên CV mới
+                            </p>
+                            <p className="text-xs text-gray-500 text-center">
+                                Hỗ trợ PDF, DOCX (Max 5MB)
+                            </p>
                         </>
                     )}
-                </Button>
+                </div>
             </div>
         </div>
     )

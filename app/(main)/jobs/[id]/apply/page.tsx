@@ -9,7 +9,7 @@ import { Button } from '@/components/ui/button';
 import { toast, Toaster } from 'react-hot-toast';
 
 interface CVFile {
-    id: string;
+    id: string; // Dùng URL làm ID nếu không có ID riêng
     name: string;
     created_at: string;
     url: string;
@@ -25,8 +25,11 @@ export default function JobApplicationPage() {
     const [fullname, setFullname] = useState('');
     const [email, setEmail] = useState('');
     const [phone, setPhone] = useState('');
-    const [cvMethod, setCvMethod] = useState<'existing' | 'upload'>('upload');
-    const [selectedCv, setSelectedCv] = useState<string>('');
+    const [coverLetter, setCoverLetter] = useState(''); // Thêm state cho thư giới thiệu
+
+    // Logic chọn CV
+    const [cvMethod, setCvMethod] = useState<'existing' | 'upload'>('existing');
+    const [selectedCv, setSelectedCv] = useState<string>(''); // Lưu ID/URL của CV đang chọn
     const [selectedCvUrl, setSelectedCvUrl] = useState<string>('');
     const [cvFile, setCvFile] = useState<File | null>(null);
 
@@ -52,45 +55,49 @@ export default function JobApplicationPage() {
                 setEmail(authEmail);
                 setFullname(authName);
 
-                // --- SỬA Ở ĐÂY: Lấy đúng cột 'full_name' trong bảng profiles ---
+                // --- SỬA LOGIC FETCH DATA TẠI ĐÂY ---
                 const { data: profile } = await supabase
                     .from('profiles')
-                    .select('full_name, phone') // Sửa từ 'fullname' thành 'full_name'
+                    .select('full_name, phone, cvs, cv_url') // Lấy cả cột danh sách 'cvs' và cột đơn 'cv_url'
                     .eq('id', user.id)
                     .maybeSingle();
 
                 if (profile) {
-                    // Ưu tiên lấy tên từ Profile (full_name), nếu không có thì lấy từ Auth
                     setFullname(profile.full_name || authName);
                     setPhone(profile.phone || '');
-                }
 
-                // B. Get Existing CVs
-                const { data: files } = await supabase.storage
-                    .from('resumes')
-                    .list(user.id + '/', {
-                        limit: 5,
-                        offset: 0,
-                        sortBy: { column: 'created_at', order: 'desc' },
-                    });
+                    // Xử lý danh sách CV từ Database
+                    let cvList: CVFile[] = [];
 
-                if (files && files.length > 0) {
-                    const mappedFiles = files.map(f => {
-                        const filePath = `${user.id}/${f.name}`;
-                        const { data: { publicUrl } } = supabase.storage
-                            .from('resumes')
-                            .getPublicUrl(filePath);
-                        return {
-                            id: f.id,
-                            name: f.name,
-                            created_at: f.created_at,
-                            url: publicUrl
-                        };
-                    });
-                    setExistingCVs(mappedFiles);
-                    setCvMethod('existing');
-                    setSelectedCv(mappedFiles[0].id);
-                    setSelectedCvUrl(mappedFiles[0].url);
+                    // A. Lấy từ cột mảng JSON 'cvs' (Ưu tiên)
+                    if (profile.cvs && Array.isArray(profile.cvs) && profile.cvs.length > 0) {
+                        cvList = profile.cvs.map((c: any, index: number) => ({
+                            id: c.url, // Dùng URL làm key định danh
+                            name: c.name || `CV không tên ${index + 1}`,
+                            created_at: c.created_at || new Date().toISOString(),
+                            url: c.url
+                        }));
+                    }
+                    // B. Fallback: Nếu danh sách rỗng, kiểm tra cột cũ 'cv_url'
+                    else if (profile.cv_url) {
+                        cvList.push({
+                            id: profile.cv_url,
+                            name: 'CV hiện tại (Đã lưu)',
+                            created_at: new Date().toISOString(),
+                            url: profile.cv_url
+                        });
+                    }
+
+                    setExistingCVs(cvList);
+
+                    // Tự động chọn CV mới nhất nếu có
+                    if (cvList.length > 0) {
+                        setCvMethod('existing');
+                        setSelectedCv(cvList[cvList.length - 1].id);
+                        setSelectedCvUrl(cvList[cvList.length - 1].url);
+                    } else {
+                        setCvMethod('upload'); // Chưa có CV thì chuyển sang tab upload
+                    }
                 }
 
             } catch (error) {
@@ -119,7 +126,7 @@ export default function JobApplicationPage() {
                 return;
             }
         } else {
-            if (!selectedCv) {
+            if (!selectedCvUrl) {
                 toast.error('Vui lòng chọn một CV có sẵn!');
                 return;
             }
@@ -134,9 +141,9 @@ export default function JobApplicationPage() {
 
             // 1. Handle Upload if needed
             if (cvMethod === 'upload' && cvFile) {
-                // Tên file: user_id/timestamp_cleanName
+                // Tên file: timestamp_cleanName để tránh trùng
                 const cleanName = cvFile.name.replace(/[^a-zA-Z0-9.-]/g, '_');
-                const fileName = `${user.id}/${Date.now()}_${cleanName}`;
+                const fileName = `${Date.now()}_${cleanName}`;
 
                 const { error: uploadError } = await supabase.storage
                     .from('resumes')
@@ -150,34 +157,49 @@ export default function JobApplicationPage() {
 
                 finalCvUrl = publicUrl;
 
-                // Optional: Save to profiles table as latest CV
-                // Lưu ý: Update bảng profiles dùng 'cv_url' và 'cv_name' (theo schema của bạn)
+                // --- QUAN TRỌNG: Cập nhật file mới vào danh sách 'cvs' trong Profile ---
+                const newCV = {
+                    name: cvFile.name,
+                    url: publicUrl,
+                    created_at: new Date().toISOString()
+                };
+
+                // Lấy danh sách cũ, thêm cái mới vào
+                const updatedList = [...existingCVs, newCV];
+
+                // Update DB
                 await supabase.from('profiles').update({
-                    cv_url: publicUrl,
-                    cv_name: cvFile.name
+                    cvs: updatedList,
+                    // Cập nhật cả cột cũ để tương thích ngược nếu cần
+                    cv_url: publicUrl
                 }).eq('id', user.id);
             }
 
             // 2. Submit Application
-            // Lưu ý: Bảng applications dùng 'fullname' (không gạch dưới) - Cái này bạn đã đúng
             const { error: insertError } = await supabase
                 .from('applications')
                 .insert([
                     {
-                        job_id: id, // ID lấy từ URL là string, Supabase UUID cũng là string nên để nguyên
-                        user_id: user.id,
-                        fullname: fullname, // Map state fullname vào cột fullname
+                        job_id: id,
+                        applicant_id: user.id, // Sửa user_id thành applicant_id (nếu bảng của bạn dùng tên này)
+                        // Nếu bảng dùng user_id thì đổi lại dòng trên thành user_id: user.id
+                        fullname: fullname,
                         email,
                         phone,
                         cv_url: finalCvUrl,
+                        cover_letter: coverLetter,
                         status: 'pending',
                     },
                 ]);
 
-            if (insertError) throw new Error(`Lỗi lưu đơn ứng tuyển: ${insertError.message}`);
+            if (insertError) {
+                // Thử lại với column user_id nếu applicant_id lỗi (tuỳ schema của bạn)
+                console.error("Insert error detail:", insertError);
+                throw new Error(`Lỗi lưu đơn: ${insertError.message}`);
+            }
 
             toast.success('Nộp hồ sơ thành công!');
-            router.push('/');
+            router.push('/my-applications'); // Chuyển hướng
         } catch (error: any) {
             console.error('Submission error:', error);
             toast.error(error.message || 'Đã có lỗi xảy ra. Vui lòng thử lại.');
@@ -267,7 +289,6 @@ export default function JobApplicationPage() {
                                     value={email}
                                     onChange={(e) => setEmail(e.target.value)}
                                     className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 bg-gray-100 cursor-not-allowed"
-                                    placeholder="example@email.com"
                                     readOnly
                                 />
                             </div>
@@ -360,14 +381,14 @@ export default function JobApplicationPage() {
                                                     name="cv-upload"
                                                     type="file"
                                                     className="sr-only"
-                                                    accept=".pdf"
+                                                    accept=".pdf,.doc,.docx"
                                                     onChange={handleFileChange}
                                                     disabled={isSubmitting}
                                                 />
                                             </label>
                                             <p className="pl-1">hoặc kéo thả</p>
                                         </div>
-                                        <p className="text-xs text-gray-500">PDF tối đa 5MB</p>
+                                        <p className="text-xs text-gray-500">PDF, DOCX tối đa 5MB</p>
                                         {cvFile && (
                                             <div className="flex items-center justify-center gap-2 text-green-600 mt-2">
                                                 <CheckCircle className="size-4" />
