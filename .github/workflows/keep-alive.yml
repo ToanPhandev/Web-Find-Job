@@ -2,18 +2,22 @@ name: Keep Supabase Alive
 
 on:
   schedule:
-    # Chạy vào 00:00 UTC mỗi ngày
-    - cron: '0 0 * * *'
-  workflow_dispatch: # Cho phép bấm chạy thủ công để test
+    # 1. ĐỔI GIỜ: Chạy vào 04:17 UTC mỗi ngày (giờ lẻ, ít người dùng)
+    - cron: '17 4 * * *' 
+  workflow_dispatch:
 
 jobs:
   ping-supabase:
     runs-on: ubuntu-latest
     steps:
-      - name: Ping Supabase Database
+      - name: Random Sleep to mimic human behavior
+        # 3. NGỦ NGẪU NHIÊN: Chờ từ 1 đến 120 giây trước khi chạy
+        run: sleep $(shuf -i 1-120 -n 1)
+
+      - name: Ping Supabase Database as Chrome
         run: |
-          # Gọi lệnh lấy 1 dòng từ bảng 'jobs' để tạo tương tác
-          # Lưu ý: Thay 'jobs' bằng tên bảng bất kỳ có trong DB của bạn
-          curl -X GET "${{ secrets.SUPABASE_URL }}/rest/v1/jobs?select=id&limit=1" \
+          # 2. GIẢ DẠNG CHROME: Thêm User-Agent (-A) để giống trình duyệt thật
+          curl -v -X GET "${{ secrets.SUPABASE_URL }}/rest/v1/jobs?select=id&limit=1" \
           -H "apikey: ${{ secrets.SUPABASE_KEY }}" \
-          -H "Authorization: Bearer ${{ secrets.SUPABASE_KEY }}"
+          -H "Authorization: Bearer ${{ secrets.SUPABASE_KEY }}" \
+          -A "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
