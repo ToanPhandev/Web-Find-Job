@@ -55,7 +55,7 @@ export default function EducationSection({ educationList, onChange, isEditing }:
                             <div className="space-y-4">
                                 <div className="flex justify-between">
                                     <h4 className="text-sm font-medium text-gray-500">Mục #{index + 1}</h4>
-                                    <Button variant="ghost" size="icon-sm" onClick={() => handleRemove(index)} className="text-red-500 hover:text-red-700 h-8 w-8">
+                                    <Button variant="ghost" size="icon" onClick={() => handleRemove(index)} className="text-red-500 hover:text-red-700 h-8 w-8">
                                         <Trash2 className="size-4" />
                                     </Button>
                                 </div>
