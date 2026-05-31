@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { Briefcase, ChevronLeft } from "lucide-react";
+import { ToggleTheme } from "@/components/ToggleTheme";
 
 export default function AuthLayout({
     children,
@@ -19,13 +20,16 @@ export default function AuthLayout({
                 </Link>
 
                 {/* Bên phải: Nút quay về */}
-                <Link
-                    href="/"
-                    className="flex items-center text-sm font-medium text-muted-foreground hover:text-primary transition-colors"
-                >
-                    <ChevronLeft className="mr-1 h-4 w-4" />
-                    Về trang chủ
-                </Link>
+                <div className="flex items-center gap-4">
+                    <Link
+                        href="/"
+                        className="flex items-center text-sm font-medium text-muted-foreground hover:text-primary transition-colors"
+                    >
+                        <ChevronLeft className="mr-1 h-4 w-4" />
+                        Về trang chủ
+                    </Link>
+                    <ToggleTheme />
+                </div>
             </header>
 
             {/* --- PHẦN NỘI DUNG (Form) --- */}

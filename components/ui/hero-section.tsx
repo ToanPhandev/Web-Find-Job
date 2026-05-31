@@ -15,6 +15,7 @@ import {
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { motion, useAnimation, useInView } from "framer-motion";
 import { Button } from "@/components/ui/button";
+import { ToggleTheme } from "@/components/ToggleTheme";
 
 const navigationItems = [
     { title: "VIỆC LÀM", href: "/jobs" },
@@ -89,6 +90,7 @@ export function JobHero() {
                         <Button className="rounded-full hidden md:inline-flex bg-primary hover:bg-primary/90 shadow-lg shadow-blue-200">
                             Đăng Tuyển Ngay <ArrowRight className="ml-1 w-4 h-4" />
                         </Button>
+                        <ToggleTheme />
 
                         <Sheet>
                             <SheetTrigger asChild>
