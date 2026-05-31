@@ -25,11 +25,6 @@ export default function LandingPage() {
         <div className="absolute inset-0 -z-10 h-full w-full bg-white bg-[radial-gradient(#e5e7eb_1px,transparent_1px)] [background-size:16px_16px]"></div>
 
         <div className="max-w-3xl space-y-8 animate-in fade-in slide-in-from-bottom-10 duration-700">
-          <div className="inline-flex items-center rounded-full border border-blue-200 bg-blue-50 px-3 py-1 text-sm text-blue-800">
-            <span className="flex h-2 w-2 rounded-full bg-blue-600 mr-2 animate-pulse"></span>
-            Nền tảng tuyển dụng số 1 Việt Nam
-          </div>
-
           <h1 className="text-5xl md:text-7xl font-extrabold tracking-tight text-gray-900">
             Khởi đầu hành trình <br />
             <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-indigo-600">
