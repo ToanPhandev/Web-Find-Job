@@ -48,7 +48,7 @@ function LoginContent() {
                 if (nextUrl) {
                     router.push(nextUrl);
                 } else {
-                    router.push('/');
+                    router.push('/jobs');
                 }
             } else {
                 // 1. Kiểm tra email đã tồn tại chưa
