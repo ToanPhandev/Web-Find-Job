@@ -11,9 +11,9 @@ const JobList: React.FC<JobListProps> = ({ jobs }) => {
     if (jobs.length === 0) {
         return (
             <div className="flex flex-col items-center justify-center py-16 px-4 text-center">
-                <div className="bg-gray-50 p-4 rounded-full mb-4">
+                <div className="bg-muted p-4 rounded-full mb-4">
                     <svg
-                        className="w-8 h-8 text-gray-400"
+                        className="w-8 h-8 text-muted-foreground"
                         fill="none"
                         stroke="currentColor"
                         viewBox="0 0 24 24"
@@ -27,10 +27,10 @@ const JobList: React.FC<JobListProps> = ({ jobs }) => {
                         ></path>
                     </svg>
                 </div>
-                <h3 className="text-lg font-medium text-gray-900 mb-1">
+                <h3 className="text-lg font-medium text-foreground mb-1">
                     Không tìm thấy công việc phù hợp
                 </h3>
-                <p className="text-gray-500 max-w-sm">
+                <p className="text-muted-foreground max-w-sm">
                     Thử thay đổi từ khóa tìm kiếm hoặc xóa bộ lọc để xem nhiều kết quả hơn.
                 </p>
             </div>

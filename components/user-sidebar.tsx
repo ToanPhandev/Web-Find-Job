@@ -95,7 +95,7 @@ export function UserSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) 
                     <SidebarMenuItem>
                         <SidebarMenuButton size="lg" asChild>
                             <Link href="/">
-                                <div className="flex aspect-square size-8 items-center justify-center rounded-lg bg-blue-600 text-white">
+                                <div className="flex aspect-square size-8 items-center justify-center rounded-lg bg-primary text-primary-foreground">
                                     <Home className="size-4" />
                                 </div>
                                 <div className="grid flex-1 text-left text-sm leading-tight group-data-[collapsible=icon]:hidden">
@@ -183,7 +183,7 @@ export function UserSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) 
                                     align="end"
                                     sideOffset={4}
                                 >
-                                    <DropdownMenuItem onClick={handleLogout} className="text-red-500 focus:text-red-500 focus:bg-red-50">
+                                    <DropdownMenuItem onClick={handleLogout} className="text-destructive focus:text-destructive focus:bg-red-50">
                                         <LogOut className="mr-2 size-4" />
                                         Đăng xuất
                                     </DropdownMenuItem>
@@ -192,7 +192,7 @@ export function UserSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) 
                         ) : (
                             <SidebarMenuButton size="lg" asChild>
                                 <Link href="/login">
-                                    <div className="flex aspect-square size-8 items-center justify-center rounded-lg bg-zinc-900 text-white">
+                                    <div className="flex aspect-square size-8 items-center justify-center rounded-lg bg-zinc-900 text-primary-foreground">
                                         <LogIn className="size-4" />
                                     </div>
                                     <div className="grid flex-1 text-left text-sm leading-tight group-data-[collapsible=icon]:hidden">

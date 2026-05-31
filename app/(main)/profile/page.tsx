@@ -215,7 +215,7 @@ export default function ProfilePage() {
     if (loading) {
         return (
             <div className="flex h-[50vh] items-center justify-center">
-                <Loader2 className="h-8 w-8 animate-spin text-blue-600" />
+                <Loader2 className="h-8 w-8 animate-spin text-primary" />
             </div>
         )
     }
@@ -227,13 +227,13 @@ export default function ProfilePage() {
         <div className="max-w-6xl mx-auto space-y-6 pb-10 pt-3 px-4 sm:px-6">
 
             {/* Header / Cover Area */}
-            <div className="bg-white rounded-xl shadow-sm p-6 sm:p-8 relative overflow-hidden">
+            <div className="bg-card text-card-foreground rounded-xl shadow-sm p-6 sm:p-8 relative overflow-hidden">
                 <div className="flex flex-col sm:flex-row items-center sm:items-start gap-6 relative z-10">
                     {/* Avatar Section */}
                     <div className="relative group">
                         <Avatar className="w-32 h-32 sm:w-40 sm:h-40 border-4 border-white shadow-md">
                             <AvatarImage src={profile.avatar_url} alt="User Avatar" className="object-cover" />
-                            <AvatarFallback className="text-4xl font-bold bg-blue-600 text-white">
+                            <AvatarFallback className="text-4xl font-bold bg-primary text-primary-foreground">
                                 {profile.full_name ? profile.full_name.charAt(0).toUpperCase() : 'U'}
                             </AvatarFallback>
                         </Avatar>
@@ -244,7 +244,7 @@ export default function ProfilePage() {
                                     className="absolute inset-0 bg-black/40 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer"
                                     onClick={handleAvatarClick}
                                 >
-                                    <Camera className="text-white w-8 h-8" />
+                                    <Camera className="text-primary-foreground w-8 h-8" />
                                 </div>
                                 <input
                                     type="file"
@@ -254,8 +254,8 @@ export default function ProfilePage() {
                                     onChange={handleAvatarChange}
                                 />
                                 {uploadingAvatar && (
-                                    <div className="absolute inset-0 bg-white/70 rounded-full flex items-center justify-center">
-                                        <Loader2 className="animate-spin text-blue-600 w-8 h-8" />
+                                    <div className="absolute inset-0 bg-card text-card-foreground/70 rounded-full flex items-center justify-center">
+                                        <Loader2 className="animate-spin text-primary w-8 h-8" />
                                     </div>
                                 )}
                             </>
@@ -267,7 +267,7 @@ export default function ProfilePage() {
                         {isEditing ? (
                             <div className="grid gap-4 max-w-lg">
                                 <div>
-                                    <label className="text-xs font-semibold text-gray-500 uppercase">Họ và tên</label>
+                                    <label className="text-xs font-semibold text-muted-foreground uppercase">Họ và tên</label>
                                     <Input
                                         name="full_name"
                                         value={profile.full_name}
@@ -277,7 +277,7 @@ export default function ProfilePage() {
                                     />
                                 </div>
                                 <div>
-                                    <label className="text-xs font-semibold text-gray-500 uppercase">Tiêu đề / Vị trí</label>
+                                    <label className="text-xs font-semibold text-muted-foreground uppercase">Tiêu đề / Vị trí</label>
                                     <Input
                                         name="university"
                                         value={profile.university}
@@ -289,24 +289,24 @@ export default function ProfilePage() {
                         ) : (
                             <>
                                 <div>
-                                    <h2 className="text-3xl font-bold text-gray-900">
+                                    <h2 className="text-3xl font-bold text-foreground">
                                         {profile.full_name || 'Chưa cập nhật tên'}
                                     </h2>
-                                    <p className="text-xl text-blue-600 font-medium">
+                                    <p className="text-xl text-primary font-medium">
                                         {profile.university || 'Chức danh / Chuyên ngành...'}
                                     </p>
                                 </div>
                             </>
                         )}
 
-                        <div className="flex flex-wrap justify-center sm:justify-start gap-4 text-gray-600">
-                            <div className="flex items-center gap-2 text-sm bg-gray-50 px-3 py-1.5 rounded-full border border-gray-100">
-                                <Mail className="size-4 text-gray-400" />
+                        <div className="flex flex-wrap justify-center sm:justify-start gap-4 text-muted-foreground">
+                            <div className="flex items-center gap-2 text-sm bg-muted px-3 py-1.5 rounded-full border border-border">
+                                <Mail className="size-4 text-muted-foreground" />
                                 <span>{userEmail}</span>
                             </div>
 
-                            <div className="flex items-center gap-2 text-sm bg-gray-50 px-3 py-1.5 rounded-full border border-gray-100">
-                                <Phone className="size-4 text-gray-400" />
+                            <div className="flex items-center gap-2 text-sm bg-muted px-3 py-1.5 rounded-full border border-border">
+                                <Phone className="size-4 text-muted-foreground" />
                                 {isEditing ? (
                                     <Input
                                         name="phone"
@@ -322,8 +322,8 @@ export default function ProfilePage() {
 
                             {/* Portfolio Link */}
                             {(isEditing || profile.portfolio_url) && (
-                                <div className="flex items-center gap-2 text-sm bg-gray-50 px-3 py-1.5 rounded-full border border-gray-100">
-                                    <Globe className="size-4 text-gray-400" />
+                                <div className="flex items-center gap-2 text-sm bg-muted px-3 py-1.5 rounded-full border border-border">
+                                    <Globe className="size-4 text-muted-foreground" />
                                     {isEditing ? (
                                         <Input
                                             name="portfolio_url"
@@ -333,15 +333,15 @@ export default function ProfilePage() {
                                             className="h-7 w-48 text-sm border-none bg-transparent shadow-none focus-visible:ring-0 p-0"
                                         />
                                     ) : (
-                                        <a href={profile.portfolio_url} target="_blank" rel="noreferrer" className="text-blue-600 hover:underline hover:text-blue-700 truncate max-w-[200px]">
+                                        <a href={profile.portfolio_url} target="_blank" rel="noreferrer" className="text-primary hover:underline hover:text-primary truncate max-w-[200px]">
                                             {profile.portfolio_url}
                                         </a>
                                     )}
                                 </div>
                             )}
 
-                            <div className="flex items-center gap-2 text-sm bg-gray-50 px-3 py-1.5 rounded-full border border-gray-100">
-                                <MapPin className="size-4 text-gray-400" />
+                            <div className="flex items-center gap-2 text-sm bg-muted px-3 py-1.5 rounded-full border border-border">
+                                <MapPin className="size-4 text-muted-foreground" />
                                 {isEditing ? (
                                     <Input
                                         name="address"
@@ -361,16 +361,16 @@ export default function ProfilePage() {
                     <div className="mt-4 sm:mt-0 flex items-center gap-3">
                         {isEditing ? (
                             <>
-                                <Button variant="outline" onClick={() => setIsEditing(false)} disabled={saving} className="border-gray-300">
+                                <Button variant="outline" onClick={() => setIsEditing(false)} disabled={saving} className="border-border">
                                     <X className="size-4 mr-2" /> Hủy
                                 </Button>
-                                <Button onClick={handleSave} disabled={saving} className="bg-blue-600 hover:bg-blue-700">
+                                <Button onClick={handleSave} disabled={saving} className="bg-primary hover:bg-primary/90">
                                     {saving ? <Loader2 className="size-4 mr-2 animate-spin" /> : <Save className="size-4 mr-2" />}
                                     Lưu thay đổi
                                 </Button>
                             </>
                         ) : (
-                            <Button onClick={() => setIsEditing(true)} className="bg-white text-gray-700 border border-gray-300 hover:bg-gray-50 shadow-sm">
+                            <Button onClick={() => setIsEditing(true)} className="bg-card text-muted-foreground border border-border hover:bg-muted shadow-sm">
                                 <Edit2 className="size-4 mr-2" />
                                 Chỉnh sửa hồ sơ
                             </Button>
@@ -383,9 +383,9 @@ export default function ProfilePage() {
                 {/* Left Column (Main Content) */}
                 <div className="lg:col-span-2 space-y-6">
                     {/* About Me */}
-                    <div className="bg-white rounded-xl shadow-sm p-6">
-                        <h2 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
-                            <span className="p-2 bg-blue-100 rounded-lg text-blue-600">
+                    <div className="bg-card text-card-foreground rounded-xl shadow-sm p-6">
+                        <h2 className="text-lg font-bold text-foreground mb-4 flex items-center gap-2">
+                            <span className="p-2 bg-blue-100 rounded-lg text-primary">
                                 <FileText className="size-5" />
                             </span>
                             Giới thiệu
@@ -397,43 +397,43 @@ export default function ProfilePage() {
                                 onChange={handleChange}
                                 placeholder="Viết vài dòng giới thiệu về bản thân, kinh nghiệm, mục tiêu nghề nghiệp..."
                                 rows={5}
-                                className="bg-gray-50 border-gray-200 focus:bg-white transition-colors"
+                                className="bg-muted border-border focus:bg-card text-card-foreground transition-colors"
                             />
                         ) : (
-                            <div className="text-gray-600 leading-relaxed whitespace-pre-wrap">
-                                {profile.bio || <span className="text-gray-400 italic">Chưa có thông tin giới thiệu.</span>}
+                            <div className="text-muted-foreground leading-relaxed whitespace-pre-wrap">
+                                {profile.bio || <span className="text-muted-foreground italic">Chưa có thông tin giới thiệu.</span>}
                             </div>
                         )}
                     </div>
 
                     {/* Education */}
-                    <div className="bg-white rounded-xl shadow-sm p-6">
+                    <div className="bg-card text-card-foreground rounded-xl shadow-sm p-6">
                         <div className="flex justify-between items-center mb-6">
-                            <h2 className="text-lg font-bold text-gray-900 flex items-center gap-2">
+                            <h2 className="text-lg font-bold text-foreground flex items-center gap-2">
                                 <span className="p-2 bg-green-100 rounded-lg text-green-600">
                                     <GraduationCap className="size-5" />
                                 </span>
                                 Học vấn
                             </h2>
                             {isEditing && (
-                                <Button size="sm" variant="ghost" onClick={addEducation} className="text-blue-600 hover:text-blue-700 hover:bg-blue-50">
+                                <Button size="sm" variant="ghost" onClick={addEducation} className="text-primary hover:text-primary hover:bg-primary/10">
                                     <Plus className="size-4 mr-1" /> Thêm trường
                                 </Button>
                             )}
                         </div>
 
                         <div className="space-y-6">
-                            {profile.education.length === 0 && <p className="text-gray-400 italic text-center py-4">Chưa cập nhật học vấn.</p>}
+                            {profile.education.length === 0 && <p className="text-muted-foreground italic text-center py-4">Chưa cập nhật học vấn.</p>}
 
                             {profile.education.map((item, index) => (
-                                <div key={index} className="relative pl-6 border-l-2 border-gray-100 last:border-0 pb-6 last:pb-0">
+                                <div key={index} className="relative pl-6 border-l-2 border-border last:border-0 pb-6 last:pb-0">
                                     <div className="absolute -left-[9px] top-0 w-4 h-4 rounded-full bg-green-100 border-2 border-green-500"></div>
 
                                     {isEditing ? (
-                                        <div className="space-y-3 p-4 border rounded-xl bg-gray-50/50">
+                                        <div className="space-y-3 p-4 border rounded-xl bg-muted/50">
                                             <div className="flex justify-between items-center">
-                                                <h4 className="text-xs font-bold text-gray-500 uppercase">Mục #{index + 1}</h4>
-                                                <button onClick={() => removeEducation(index)} className="text-red-400 hover:text-red-600 p-1 hover:bg-red-50 rounded">
+                                                <h4 className="text-xs font-bold text-muted-foreground uppercase">Mục #{index + 1}</h4>
+                                                <button onClick={() => removeEducation(index)} className="text-red-400 hover:text-destructive p-1 hover:bg-destructive/10 rounded">
                                                     <Trash2 className="size-4" />
                                                 </button>
                                             </div>
@@ -442,27 +442,27 @@ export default function ProfilePage() {
                                                     placeholder="Tên trường"
                                                     value={item.school}
                                                     onChange={(e) => handleEducationChange(index, 'school', e.target.value)}
-                                                    className="bg-white"
+                                                    className="bg-card text-card-foreground"
                                                 />
                                                 <Input
                                                     placeholder="Chuyên ngành"
                                                     value={item.major}
                                                     onChange={(e) => handleEducationChange(index, 'major', e.target.value)}
-                                                    className="bg-white"
+                                                    className="bg-card text-card-foreground"
                                                 />
                                                 <Input
                                                     placeholder="Niên khóa (VD: 2019-2023)"
                                                     value={item.years}
                                                     onChange={(e) => handleEducationChange(index, 'years', e.target.value)}
-                                                    className="bg-white sm:col-span-2"
+                                                    className="bg-card text-card-foreground sm:col-span-2"
                                                 />
                                             </div>
                                         </div>
                                     ) : (
                                         <div>
-                                            <h3 className="font-bold text-gray-900 text-lg">{item.school}</h3>
-                                            <p className="text-gray-600 font-medium">{item.major}</p>
-                                            <p className="text-sm text-gray-400 mt-1">{item.years}</p>
+                                            <h3 className="font-bold text-foreground text-lg">{item.school}</h3>
+                                            <p className="text-muted-foreground font-medium">{item.major}</p>
+                                            <p className="text-sm text-muted-foreground mt-1">{item.years}</p>
                                         </div>
                                     )}
                                 </div>
@@ -471,31 +471,31 @@ export default function ProfilePage() {
                     </div>
 
                     {/* Projects */}
-                    <div className="bg-white rounded-xl shadow-sm p-6">
+                    <div className="bg-card text-card-foreground rounded-xl shadow-sm p-6">
                         <div className="flex justify-between items-center mb-6">
-                            <h2 className="text-lg font-bold text-gray-900 flex items-center gap-2">
+                            <h2 className="text-lg font-bold text-foreground flex items-center gap-2">
                                 <span className="p-2 bg-purple-100 rounded-lg text-purple-600">
                                     <Briefcase className="size-5" />
                                 </span>
                                 Dự án nổi bật
                             </h2>
                             {isEditing && (
-                                <Button size="sm" variant="ghost" onClick={addProject} className="text-blue-600 hover:text-blue-700 hover:bg-blue-50">
+                                <Button size="sm" variant="ghost" onClick={addProject} className="text-primary hover:text-primary hover:bg-primary/10">
                                     <Plus className="size-4 mr-1" /> Thêm dự án
                                 </Button>
                             )}
                         </div>
 
                         <div className="grid grid-cols-1 gap-4">
-                            {profile.projects.length === 0 && <p className="text-gray-400 italic text-center py-4">Chưa cập nhật dự án.</p>}
+                            {profile.projects.length === 0 && <p className="text-muted-foreground italic text-center py-4">Chưa cập nhật dự án.</p>}
 
                             {profile.projects.map((item, index) => (
-                                <div key={index} className="group border border-gray-100 rounded-xl p-5 hover:border-purple-200 hover:shadow-sm transition-all bg-white">
+                                <div key={index} className="group border border-border rounded-xl p-5 hover:border-purple-200 hover:shadow-sm transition-all bg-card text-card-foreground">
                                     {isEditing ? (
                                         <div className="space-y-3">
                                             <div className="flex justify-between items-center">
-                                                <h4 className="text-xs font-bold text-gray-500 uppercase">Dự án #{index + 1}</h4>
-                                                <button onClick={() => removeProject(index)} className="text-red-400 hover:text-red-600 p-1 hover:bg-red-50 rounded">
+                                                <h4 className="text-xs font-bold text-muted-foreground uppercase">Dự án #{index + 1}</h4>
+                                                <button onClick={() => removeProject(index)} className="text-red-400 hover:text-destructive p-1 hover:bg-destructive/10 rounded">
                                                     <Trash2 className="size-4" />
                                                 </button>
                                             </div>
@@ -514,8 +514,8 @@ export default function ProfilePage() {
                                         </div>
                                     ) : (
                                         <>
-                                            <h3 className="font-bold text-gray-900 text-lg mb-2 group-hover:text-purple-600 transition-colors">{item.name}</h3>
-                                            <p className="text-gray-600 text-sm leading-relaxed">
+                                            <h3 className="font-bold text-foreground text-lg mb-2 group-hover:text-purple-600 transition-colors">{item.name}</h3>
+                                            <p className="text-muted-foreground text-sm leading-relaxed">
                                                 {item.desc}
                                             </p>
                                         </>
@@ -532,8 +532,8 @@ export default function ProfilePage() {
                         <CVUpload />
 
                         {/* Skills */}
-                        <div className="bg-white rounded-xl shadow-sm p-6">
-                            <h2 className="font-bold text-gray-900 mb-4 flex items-center">
+                        <div className="bg-card text-card-foreground rounded-xl shadow-sm p-6">
+                            <h2 className="font-bold text-foreground mb-4 flex items-center">
                                 Kỹ năng chuyên môn
                             </h2>
                             {isEditing ? (
@@ -544,15 +544,15 @@ export default function ProfilePage() {
                                         placeholder="Nhập kỹ năng ngăn cách bằng dấu phẩy. VD: React, Node.js, SQL"
                                         className="min-h-[100px]"
                                     />
-                                    <p className="text-xs text-gray-400">
+                                    <p className="text-xs text-muted-foreground">
                                         Mẹo: Nhập nhiều kỹ năng ngăn cách bởi dấu phẩy
                                     </p>
                                 </div>
                             ) : (
                                 <div className="flex flex-wrap gap-2">
-                                    {profile.skills.length === 0 && <span className="text-sm text-gray-400 italic">Chưa có kỹ năng.</span>}
+                                    {profile.skills.length === 0 && <span className="text-sm text-muted-foreground italic">Chưa có kỹ năng.</span>}
                                     {profile.skills.map((skill, index) => (
-                                        <Badge key={index} variant="secondary" className="bg-gray-100 text-gray-700 hover:bg-gray-200 px-3 py-1">
+                                        <Badge key={index} variant="secondary" className="bg-muted text-muted-foreground hover:bg-muted px-3 py-1">
                                             {skill}
                                         </Badge>
                                     ))}

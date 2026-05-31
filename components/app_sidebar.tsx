@@ -86,7 +86,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                             className="group-data-[collapsible=icon]:!justify-center"
                         >
                             <Link href="/">
-                                <div className="flex aspect-square size-8 items-center justify-center rounded-lg bg-blue-600 text-white">
+                                <div className="flex aspect-square size-8 items-center justify-center rounded-lg bg-primary text-primary-foreground">
                                     <Home className="size-4" />
                                 </div>
                                 <div className="grid flex-1 text-left text-sm leading-tight group-data-[collapsible=icon]:hidden">
@@ -146,7 +146,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                                     size="lg"
                                     className="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground group-data-[collapsible=icon]:!justify-center"
                                 >
-                                    <div className="flex aspect-square size-8 items-center justify-center rounded-lg bg-gray-200 text-gray-700 font-bold uppercase">
+                                    <div className="flex aspect-square size-8 items-center justify-center rounded-lg bg-muted text-muted-foreground font-bold uppercase">
                                         {/* Fallback avatar */}
                                         {user?.email?.[0] || <User2 className="size-4" />}
                                     </div>
@@ -165,7 +165,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                                 align="end"
                                 sideOffset={4}
                             >
-                                <DropdownMenuItem onClick={handleLogout} className="text-red-500 focus:text-red-500 focus:bg-red-50 cursor-pointer">
+                                <DropdownMenuItem onClick={handleLogout} className="text-destructive focus:text-destructive focus:bg-red-50 cursor-pointer">
                                     <LogOut className="mr-2 size-4" />
                                     Đăng xuất
                                 </DropdownMenuItem>

@@ -8,13 +8,13 @@ interface JobCardProps {
 
 const JobCard: React.FC<JobCardProps> = ({ job }) => {
     return (
-        <div className="bg-white rounded-lg shadow-sm hover:shadow-md transition-shadow duration-300 p-6 border border-gray-100 flex flex-col h-full">
+        <div className="bg-card text-card-foreground rounded-lg shadow-sm hover:shadow-md transition-shadow duration-300 p-6 border border-border flex flex-col h-full">
             <div className="flex justify-between items-start mb-4">
                 <div>
-                    <h3 className="text-xl font-bold text-gray-900 mb-1 line-clamp-1" title={job.title}>
+                    <h3 className="text-xl font-bold text-foreground mb-1 line-clamp-1" title={job.title}>
                         {job.title}
                     </h3>
-                    <p className="text-gray-600 font-medium">{job.company}</p>
+                    <p className="text-muted-foreground font-medium">{job.company}</p>
                 </div>
                 <span className="text-green-600 font-bold bg-green-50 px-3 py-1 rounded-full text-sm whitespace-nowrap">
                     {job.salary_range}
@@ -25,15 +25,15 @@ const JobCard: React.FC<JobCardProps> = ({ job }) => {
                 {job.tags.map((tag, index) => (
                     <span
                         key={index}
-                        className="bg-blue-50 text-blue-700 text-xs font-semibold px-2.5 py-0.5 rounded-full"
+                        className="bg-primary/10 text-blue-700 text-xs font-semibold px-2.5 py-0.5 rounded-full"
                     >
                         {tag}
                     </span>
                 ))}
             </div>
 
-            <div className="mt-auto pt-4 border-t border-gray-100 flex items-center justify-between">
-                <div className="flex flex-col text-sm text-gray-500">
+            <div className="mt-auto pt-4 border-t border-border flex items-center justify-between">
+                <div className="flex flex-col text-sm text-muted-foreground">
                     <span className="flex items-center gap-1">
                         <svg
                             className="w-4 h-4"
@@ -65,13 +65,13 @@ const JobCard: React.FC<JobCardProps> = ({ job }) => {
                 <div className="flex gap-3">
                     <Link
                         href={`/jobs/${job.id}`}
-                        className="flex-1 text-center bg-white hover:bg-blue-50 text-blue-600 border border-blue-600 font-medium py-2 px-4 rounded-md transition-colors duration-200 text-sm"
+                        className="flex-1 text-center bg-card text-card-foreground hover:bg-primary/10 text-primary border border-primary font-medium py-2 px-4 rounded-md transition-colors duration-200 text-sm"
                     >
                         Xem chi tiết
                     </Link>
                     <Link
                         href={`/jobs/${job.id}/apply`}
-                        className="flex-1 text-center bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-md transition-colors duration-200 text-sm"
+                        className="flex-1 text-center bg-primary hover:bg-primary/90 text-primary-foreground font-medium py-2 px-4 rounded-md transition-colors duration-200 text-sm"
                     >
                         Apply Now
                     </Link>

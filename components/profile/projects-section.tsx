@@ -37,8 +37,8 @@ export default function ProjectsSection({ projectList, onChange, isEditing }: Pr
     }
 
     return (
-        <div className="bg-white rounded-xl shadow-sm p-6">
-            <h2 className="text-xl font-bold text-gray-900 mb-6 flex items-center gap-2">
+        <div className="bg-card text-card-foreground rounded-xl shadow-sm p-6">
+            <h2 className="text-xl font-bold text-foreground mb-6 flex items-center gap-2">
                 <span className="p-2 bg-purple-100 rounded-lg text-purple-600">
                     <Briefcase className="size-5" />
                 </span>
@@ -47,12 +47,12 @@ export default function ProjectsSection({ projectList, onChange, isEditing }: Pr
 
             <div className="space-y-4">
                 {projectList.map((project, index) => (
-                    <div key={index} className={`rounded-lg ${isEditing ? 'p-4 border border-gray-100 bg-gray-50' : 'border border-gray-100 p-4 hover:border-blue-200 transition-colors'}`}>
+                    <div key={index} className={`rounded-lg ${isEditing ? 'p-4 border border-border bg-muted' : 'border border-border p-4 hover:border-blue-200 transition-colors'}`}>
                         {isEditing ? (
                             <div className="space-y-4">
                                 <div className="flex justify-between items-center">
-                                    <h4 className="text-sm font-medium text-gray-500">Dự án #{index + 1}</h4>
-                                    <Button variant="ghost" size="icon" onClick={() => handleRemove(index)} className="text-red-500 hover:text-red-700 h-8 w-8">
+                                    <h4 className="text-sm font-medium text-muted-foreground">Dự án #{index + 1}</h4>
+                                    <Button variant="ghost" size="icon" onClick={() => handleRemove(index)} className="text-destructive hover:text-red-700 h-8 w-8">
                                         <Trash2 className="size-4" />
                                     </Button>
                                 </div>
@@ -77,14 +77,14 @@ export default function ProjectsSection({ projectList, onChange, isEditing }: Pr
                         ) : (
                             <>
                                 <div className="flex justify-between items-start mb-2">
-                                    <h3 className="font-semibold text-gray-900 text-lg">{project.name || 'Dự án chưa đặt tên'}</h3>
+                                    <h3 className="font-semibold text-foreground text-lg">{project.name || 'Dự án chưa đặt tên'}</h3>
                                     {project.role && (
                                         <Badge variant="secondary" className="bg-purple-50 text-purple-700 border-purple-100">
                                             {project.role}
                                         </Badge>
                                     )}
                                 </div>
-                                <p className="text-sm text-gray-600 mb-3 whitespace-pre-wrap">
+                                <p className="text-sm text-muted-foreground mb-3 whitespace-pre-wrap">
                                     {project.description || 'Chưa có mô tả.'}
                                 </p>
                             </>
@@ -93,11 +93,11 @@ export default function ProjectsSection({ projectList, onChange, isEditing }: Pr
                 ))}
 
                 {projectList.length === 0 && !isEditing && (
-                    <p className="text-gray-500 italic">Chưa có dự án nào.</p>
+                    <p className="text-muted-foreground italic">Chưa có dự án nào.</p>
                 )}
 
                 {isEditing && (
-                    <Button variant="outline" onClick={handleAdd} className="w-full border-dashed border-2 hover:bg-gray-50">
+                    <Button variant="outline" onClick={handleAdd} className="w-full border-dashed border-2 hover:bg-muted">
                         <Plus className="size-4 mr-2" /> Thêm dự án
                     </Button>
                 )}

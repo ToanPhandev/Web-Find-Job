@@ -13,10 +13,10 @@ export default async function JobDetailPage({ params }: PageProps) {
 
     if (!job) {
         return (
-            <div className="min-h-screen bg-gray-50 flex flex-col items-center justify-center px-4">
-                <div className="bg-white p-8 rounded-lg shadow-sm text-center max-w-md w-full">
+            <div className="min-h-screen bg-muted flex flex-col items-center justify-center px-4">
+                <div className="bg-card text-card-foreground p-8 rounded-lg shadow-sm text-center max-w-md w-full">
                     <svg
-                        className="w-16 h-16 text-gray-300 mx-auto mb-4"
+                        className="w-16 h-16 text-muted-foreground mx-auto mb-4"
                         fill="none"
                         stroke="currentColor"
                         viewBox="0 0 24 24"
@@ -29,15 +29,15 @@ export default async function JobDetailPage({ params }: PageProps) {
                             d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
                         ></path>
                     </svg>
-                    <h2 className="text-2xl font-bold text-gray-900 mb-2">
+                    <h2 className="text-2xl font-bold text-foreground mb-2">
                         Không tìm thấy công việc
                     </h2>
-                    <p className="text-gray-500 mb-6">
+                    <p className="text-muted-foreground mb-6">
                         Công việc bạn đang tìm kiếm có thể đã bị xóa hoặc không tồn tại.
                     </p>
                     <Link
                         href="/"
-                        className="inline-block bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-6 rounded-md transition-colors duration-200"
+                        className="inline-block bg-primary hover:bg-primary/90 text-primary-foreground font-medium py-2 px-6 rounded-md transition-colors duration-200"
                     >
                         Quay lại trang chủ
                     </Link>
@@ -47,14 +47,14 @@ export default async function JobDetailPage({ params }: PageProps) {
     }
 
     return (
-        <main className="min-h-screen bg-gray-50 pb-24">
+        <main className="min-h-screen bg-muted pb-24">
             {/* Header */}
-            <div className="bg-white shadow-sm border-b border-gray-200">
+            <div className="bg-card text-card-foreground shadow-sm border-b border-border">
                 <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
                     <div className="mb-4">
                         <Link
                             href="/"
-                            className="text-sm text-gray-500 hover:text-blue-600 flex items-center gap-1 mb-4 w-fit"
+                            className="text-sm text-muted-foreground hover:text-primary flex items-center gap-1 mb-4 w-fit"
                         >
                             <svg
                                 className="w-4 h-4"
@@ -72,13 +72,13 @@ export default async function JobDetailPage({ params }: PageProps) {
                             </svg>
                             Quay lại danh sách
                         </Link>
-                        <h1 className="text-3xl font-extrabold text-gray-900 mb-2">
+                        <h1 className="text-3xl font-extrabold text-foreground mb-2">
                             {job.title}
                         </h1>
-                        <div className="flex flex-wrap items-center gap-4 text-gray-600">
-                            <span className="font-medium text-gray-900 flex items-center gap-1">
+                        <div className="flex flex-wrap items-center gap-4 text-muted-foreground">
+                            <span className="font-medium text-foreground flex items-center gap-1">
                                 <svg
-                                    className="w-5 h-5 text-gray-400"
+                                    className="w-5 h-5 text-muted-foreground"
                                     fill="none"
                                     stroke="currentColor"
                                     viewBox="0 0 24 24"
@@ -95,7 +95,7 @@ export default async function JobDetailPage({ params }: PageProps) {
                             </span>
                             <span className="flex items-center gap-1">
                                 <svg
-                                    className="w-5 h-5 text-gray-400"
+                                    className="w-5 h-5 text-muted-foreground"
                                     fill="none"
                                     stroke="currentColor"
                                     viewBox="0 0 24 24"
@@ -131,7 +131,7 @@ export default async function JobDetailPage({ params }: PageProps) {
                         {job.tags.map((tag, index) => (
                             <span
                                 key={index}
-                                className="bg-blue-50 text-blue-700 text-sm font-medium px-3 py-1 rounded-full"
+                                className="bg-primary/10 text-blue-700 text-sm font-medium px-3 py-1 rounded-full"
                             >
                                 {tag}
                             </span>
@@ -142,24 +142,24 @@ export default async function JobDetailPage({ params }: PageProps) {
 
             {/* Content */}
             <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-                <div className="bg-white rounded-lg shadow-sm p-6 sm:p-8 space-y-8">
+                <div className="bg-card text-card-foreground rounded-lg shadow-sm p-6 sm:p-8 space-y-8">
                     <AIJobAnalyzer description={job.description} />
 
                     <div>
-                        <h3 className="text-xl font-bold text-gray-900 mb-4 border-b pb-2">
+                        <h3 className="text-xl font-bold text-foreground mb-4 border-b pb-2">
                             Mô tả công việc
                         </h3>
-                        <div className="prose max-w-none text-gray-700 whitespace-pre-line leading-relaxed">
+                        <div className="prose max-w-none text-muted-foreground whitespace-pre-line leading-relaxed">
                             {job.description}
                         </div>
                     </div>
 
                     {job.requirements && (
                         <div>
-                            <h3 className="text-xl font-bold text-gray-900 mb-4 border-b pb-2">
+                            <h3 className="text-xl font-bold text-foreground mb-4 border-b pb-2">
                                 Yêu cầu công việc
                             </h3>
-                            <div className="prose max-w-none text-gray-700 whitespace-pre-line leading-relaxed">
+                            <div className="prose max-w-none text-muted-foreground whitespace-pre-line leading-relaxed">
                                 {job.requirements}
                             </div>
                         </div>
@@ -168,15 +168,15 @@ export default async function JobDetailPage({ params }: PageProps) {
             </div>
 
             {/* Sticky Footer */}
-            <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.05)] p-4 z-10">
+            <div className="fixed bottom-0 left-0 right-0 bg-card text-card-foreground border-t border-border shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.05)] p-4 z-10">
                 <div className="max-w-4xl mx-auto flex items-center justify-between">
                     <div className="hidden sm:block">
-                        <p className="text-sm text-gray-500">Bạn đang xem công việc tại</p>
-                        <p className="font-bold text-gray-900">{job.company}</p>
+                        <p className="text-sm text-muted-foreground">Bạn đang xem công việc tại</p>
+                        <p className="font-bold text-foreground">{job.company}</p>
                     </div>
                     <Link
                         href={`/jobs/${job.id}/apply`}
-                        className="w-full sm:w-auto bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-8 rounded-lg transition-colors duration-200 text-center shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
+                        className="w-full sm:w-auto bg-primary hover:bg-primary/90 text-primary-foreground font-bold py-3 px-8 rounded-lg transition-colors duration-200 text-center shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
                     >
                         Ứng tuyển ngay
                     </Link>

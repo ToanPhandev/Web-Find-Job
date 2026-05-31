@@ -107,18 +107,18 @@ export default function CreateJobPage() {
                     </Link>
                 </Button>
                 <div>
-                    <h1 className="text-2xl font-bold text-gray-900">Đăng tin tuyển dụng mới</h1>
-                    <p className="text-gray-500 text-sm">Điền thông tin chi tiết về vị trí cần tuyển.</p>
+                    <h1 className="text-2xl font-bold text-foreground">Đăng tin tuyển dụng mới</h1>
+                    <p className="text-muted-foreground text-sm">Điền thông tin chi tiết về vị trí cần tuyển.</p>
                 </div>
             </div>
 
             {/* Form */}
-            <form onSubmit={handleSubmit} className="space-y-8 bg-white p-6 rounded-xl border shadow-sm">
+            <form onSubmit={handleSubmit} className="space-y-8 bg-card text-card-foreground p-6 rounded-xl border shadow-sm">
 
                 {/* Nhóm thông tin cơ bản */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div className="space-y-2">
-                        <Label htmlFor="title">Chức danh công việc <span className="text-red-500">*</span></Label>
+                        <Label htmlFor="title">Chức danh công việc <span className="text-destructive">*</span></Label>
                         <Input
                             id="title"
                             name="title"
@@ -130,7 +130,7 @@ export default function CreateJobPage() {
                     </div>
 
                     <div className="space-y-2">
-                        <Label htmlFor="company">Tên công ty <span className="text-red-500">*</span></Label>
+                        <Label htmlFor="company">Tên công ty <span className="text-destructive">*</span></Label>
                         <Input
                             id="company"
                             name="company"
@@ -142,7 +142,7 @@ export default function CreateJobPage() {
                     </div>
 
                     <div className="space-y-2">
-                        <Label htmlFor="location">Địa điểm làm việc <span className="text-red-500">*</span></Label>
+                        <Label htmlFor="location">Địa điểm làm việc <span className="text-destructive">*</span></Label>
                         <Input
                             id="location"
                             name="location"
@@ -230,7 +230,7 @@ export default function CreateJobPage() {
                     <Button type="button" variant="outline" asChild>
                         <Link href="/admin/jobs">Hủy bỏ</Link>
                     </Button>
-                    <Button type="submit" className="bg-blue-600 hover:bg-blue-700 min-w-[120px]" disabled={isLoading}>
+                    <Button type="submit" className="bg-primary hover:bg-primary/90 min-w-[120px]" disabled={isLoading}>
                         {isLoading ? (
                             <>
                                 <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Đang lưu...

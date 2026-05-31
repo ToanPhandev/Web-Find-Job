@@ -37,10 +37,10 @@ interface Application {
 
 const STATUS_OPTIONS = [
     { value: 'pending', label: 'Đang chờ', color: 'text-yellow-600 bg-yellow-50 border-yellow-200' },
-    { value: 'reviewed', label: 'Đã xem', color: 'text-blue-600 bg-blue-50 border-blue-200' },
+    { value: 'reviewed', label: 'Đã xem', color: 'text-primary bg-primary/10 border-blue-200' },
     { value: 'interview', label: 'Phỏng vấn', color: 'text-purple-600 bg-purple-50 border-purple-200' },
     { value: 'hired', label: 'Đã tuyển', color: 'text-green-600 bg-green-50 border-green-200' },
-    { value: 'rejected', label: 'Từ chối', color: 'text-red-600 bg-red-50 border-red-200' },
+    { value: 'rejected', label: 'Từ chối', color: 'text-destructive bg-red-50 border-red-200' },
 ]
 
 export default function AdminApplicationsPage() {
@@ -102,20 +102,20 @@ export default function AdminApplicationsPage() {
 
     const getStatusColorClass = (status: string) => {
         const option = STATUS_OPTIONS.find(o => o.value === status)
-        return option ? option.color : 'text-gray-600 bg-gray-50 border-gray-200'
+        return option ? option.color : 'text-muted-foreground bg-muted border-border'
     }
 
     return (
         <div className="space-y-6">
             <div>
-                <h1 className="text-3xl font-bold tracking-tight text-gray-900">Quản lý đơn ứng tuyển</h1>
-                <p className="text-gray-500 mt-2">Xem và quản lý tất cả các hồ sơ ứng viên gửi về hệ thống.</p>
+                <h1 className="text-3xl font-bold tracking-tight text-foreground">Quản lý đơn ứng tuyển</h1>
+                <p className="text-muted-foreground mt-2">Xem và quản lý tất cả các hồ sơ ứng viên gửi về hệ thống.</p>
             </div>
 
-            <div className="bg-white border rounded-lg shadow-sm">
+            <div className="bg-card text-card-foreground border rounded-lg shadow-sm">
                 <Table>
                     <TableHeader>
-                        <TableRow className="bg-gray-50/50">
+                        <TableRow className="bg-muted/50">
                             <TableHead className="w-[250px]">Ứng viên</TableHead>
                             <TableHead className="min-w-[200px]">Vị trí ứng tuyển</TableHead>
                             <TableHead className="w-[100px] text-center">CV</TableHead>
@@ -128,28 +128,28 @@ export default function AdminApplicationsPage() {
                             <TableRow>
                                 <TableCell colSpan={5} className="h-24 text-center">
                                     <div className="flex justify-center items-center gap-2">
-                                        <Loader2 className="h-6 w-6 animate-spin text-blue-600" />
-                                        <span className="text-gray-500">Đang tải dữ liệu...</span>
+                                        <Loader2 className="h-6 w-6 animate-spin text-primary" />
+                                        <span className="text-muted-foreground">Đang tải dữ liệu...</span>
                                     </div>
                                 </TableCell>
                             </TableRow>
                         ) : applications.length === 0 ? (
                             <TableRow>
-                                <TableCell colSpan={5} className="h-24 text-center text-gray-500">
+                                <TableCell colSpan={5} className="h-24 text-center text-muted-foreground">
                                     Chưa có đơn ứng tuyển nào.
                                 </TableCell>
                             </TableRow>
                         ) : (
                             applications.map((app) => (
-                                <TableRow key={app.id} className="hover:bg-gray-50/50 transition-colors">
+                                <TableRow key={app.id} className="hover:bg-muted/50 transition-colors">
                                     <TableCell>
                                         <div className="flex flex-col">
-                                            <span className="font-semibold text-gray-900">{app.fullname || 'N/A'}</span>
-                                            <span className="text-sm text-gray-500">{app.email}</span>
+                                            <span className="font-semibold text-foreground">{app.fullname || 'N/A'}</span>
+                                            <span className="text-sm text-muted-foreground">{app.email}</span>
                                         </div>
                                     </TableCell>
                                     <TableCell>
-                                        <span className="font-medium text-blue-700 bg-blue-50 px-2 py-1 rounded-md text-xs">
+                                        <span className="font-medium text-blue-700 bg-primary/10 px-2 py-1 rounded-md text-xs">
                                             {app.jobs?.title || 'Job Deleted'}
                                         </span>
                                     </TableCell>
@@ -162,10 +162,10 @@ export default function AdminApplicationsPage() {
                                                 </Link>
                                             </Button>
                                         ) : (
-                                            <span className="text-gray-400 italic text-sm">Không có file</span>
+                                            <span className="text-muted-foreground italic text-sm">Không có file</span>
                                         )}
                                     </TableCell>
-                                    <TableCell className="text-gray-600 text-center whitespace-nowrap">
+                                    <TableCell className="text-muted-foreground text-center whitespace-nowrap">
                                         {format(new Date(app.created_at), 'dd/MM/yyyy')}
                                     </TableCell>
                                     <TableCell className="text-center">

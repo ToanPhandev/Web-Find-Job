@@ -196,7 +196,7 @@ export default function CVUpload() {
     if (isLoading) {
         return (
             <div className="flex justify-center p-4">
-                <Loader2 className="h-6 w-6 animate-spin text-gray-400" />
+                <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
             </div>
         )
     }
@@ -204,8 +204,8 @@ export default function CVUpload() {
     return (
         <div className="w-full space-y-4">
             <div className="flex items-center justify-between">
-                <h3 className="font-bold text-gray-900 flex items-center gap-2">
-                    <Paperclip className="size-5 text-gray-500" />
+                <h3 className="font-bold text-foreground flex items-center gap-2">
+                    <Paperclip className="size-5 text-muted-foreground" />
                     Danh sách CV
                 </h3>
                 {cvList.length > 0 && (
@@ -213,7 +213,7 @@ export default function CVUpload() {
                         variant="ghost"
                         size="sm"
                         onClick={toggleExpandAll}
-                        className="text-xs text-blue-600 hover:text-blue-700 hover:bg-blue-50 h-8 px-2"
+                        className="text-xs text-primary hover:text-primary hover:bg-primary/10 h-8 px-2"
                     >
                         {isAllExpanded ? (
                             <>
@@ -231,21 +231,21 @@ export default function CVUpload() {
             {/* List of uploaded CVs */}
             <div className="space-y-3">
                 {cvList.length === 0 ? (
-                    <p className="text-sm text-gray-400 italic">Chưa có CV nào được tải lên.</p>
+                    <p className="text-sm text-muted-foreground italic">Chưa có CV nào được tải lên.</p>
                 ) : (
                     cvList.map((cv, index) => {
                         const isExpanded = expandedIndices.has(index)
 
                         return (
-                            <div key={index} className="bg-white border border-gray-200 rounded-lg p-3 flex items-start justify-between shadow-sm hover:shadow-md transition-shadow group">
+                            <div key={index} className="bg-card text-card-foreground border border-border rounded-lg p-3 flex items-start justify-between shadow-sm hover:shadow-md transition-shadow group">
                                 <div className="flex items-start space-x-3 overflow-hidden flex-1">
-                                    <div className="bg-blue-50 p-2 rounded-lg mt-0.5">
-                                        <FileText className="h-5 w-5 text-blue-600" />
+                                    <div className="bg-primary/10 p-2 rounded-lg mt-0.5">
+                                        <FileText className="h-5 w-5 text-primary" />
                                     </div>
                                     <div className="min-w-0 flex-1">
                                         <div className="flex items-start gap-1">
                                             <p
-                                                className={`text-sm font-medium text-gray-900 transition-all cursor-pointer ${isExpanded ? 'break-all whitespace-normal' : 'truncate'
+                                                className={`text-sm font-medium text-foreground transition-all cursor-pointer ${isExpanded ? 'break-all whitespace-normal' : 'truncate'
                                                     }`}
                                                 onClick={() => toggleExpand(index)}
                                                 title={cv.name}
@@ -254,7 +254,7 @@ export default function CVUpload() {
                                             </p>
                                             <button
                                                 onClick={() => toggleExpand(index)}
-                                                className="text-gray-400 hover:text-blue-600 p-0.5 rounded-sm transition-colors mt-0.5 shrink-0"
+                                                className="text-muted-foreground hover:text-primary p-0.5 rounded-sm transition-colors mt-0.5 shrink-0"
                                             >
                                                 {isExpanded ? (
                                                     <ChevronUp className="h-3 w-3" />
@@ -263,7 +263,7 @@ export default function CVUpload() {
                                                 )}
                                             </button>
                                         </div>
-                                        <p className="text-xs text-gray-500 flex items-center mt-1">
+                                        <p className="text-xs text-muted-foreground flex items-center mt-1">
                                             <Calendar className="h-3 w-3 mr-1" />
                                             {format(new Date(cv.created_at), 'dd/MM/yyyy')}
                                         </p>
@@ -274,14 +274,14 @@ export default function CVUpload() {
                                         href={cv.url}
                                         target="_blank"
                                         rel="noopener noreferrer"
-                                        className="p-2 text-gray-500 hover:text-blue-600 hover:bg-blue-50 rounded-full transition-colors"
+                                        className="p-2 text-muted-foreground hover:text-primary hover:bg-primary/10 rounded-full transition-colors"
                                         title="Xem CV"
                                     >
                                         <Eye className="h-4 w-4" />
                                     </a>
                                     <button
                                         onClick={() => handleDelete(index)}
-                                        className="p-2 text-gray-500 hover:text-red-600 hover:bg-red-50 rounded-full transition-colors"
+                                        className="p-2 text-muted-foreground hover:text-destructive hover:bg-destructive/10 rounded-full transition-colors"
                                         title="Xóa"
                                     >
                                         <Trash2 className="h-4 w-4" />
@@ -307,23 +307,23 @@ export default function CVUpload() {
                     onClick={triggerFileInput}
                     className={`
                         border-2 border-dashed rounded-lg p-6 flex flex-col items-center justify-center cursor-pointer transition-colors
-                        ${isUploading ? 'bg-gray-50 border-gray-300' : 'border-gray-300 hover:border-blue-500 hover:bg-blue-50'}
+                        ${isUploading ? 'bg-muted border-border' : 'border-border hover:border-primary hover:bg-primary/10'}
                     `}
                 >
                     {isUploading ? (
                         <>
                             <Loader2 className="h-8 w-8 text-blue-500 animate-spin mb-2" />
-                            <p className="text-sm text-gray-500 text-center">Đang tải lên...</p>
+                            <p className="text-sm text-muted-foreground text-center">Đang tải lên...</p>
                         </>
                     ) : (
                         <>
                             <div className="bg-blue-100 p-3 rounded-full mb-3">
-                                <Upload className="h-6 w-6 text-blue-600" />
+                                <Upload className="h-6 w-6 text-primary" />
                             </div>
-                            <p className="text-sm font-medium text-gray-900 text-center mb-1">
+                            <p className="text-sm font-medium text-foreground text-center mb-1">
                                 Tải lên CV mới
                             </p>
-                            <p className="text-xs text-gray-500 text-center">
+                            <p className="text-xs text-muted-foreground text-center">
                                 Hỗ trợ PDF, DOCX (Max 5MB)
                             </p>
                         </>

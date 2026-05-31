@@ -73,7 +73,7 @@ interface Application {
 }
 
 const getRandomColor = (char: string) => {
-    const colors = ['bg-blue-600', 'bg-indigo-600', 'bg-purple-600', 'bg-green-600', 'bg-red-500', 'bg-orange-500'];
+    const colors = ['bg-primary', 'bg-indigo-600', 'bg-purple-600', 'bg-green-600', 'bg-red-500', 'bg-orange-500'];
     const index = char.charCodeAt(0) % colors.length;
     return colors[index];
 }
@@ -237,7 +237,7 @@ export default function MyApplicationsPage() {
     if (isLoading) {
         return (
             <div className="flex h-[50vh] items-center justify-center">
-                <Loader2 className="h-8 w-8 animate-spin text-blue-600" />
+                <Loader2 className="h-8 w-8 animate-spin text-primary" />
             </div>
         )
     }
@@ -246,16 +246,16 @@ export default function MyApplicationsPage() {
         <div className="max-w-5xl mx-auto space-y-8">
             <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
                 <div>
-                    <h1 className="text-3xl font-bold text-gray-900 tracking-tight">Việc đã ứng tuyển</h1>
-                    <p className="text-gray-500 mt-2">Theo dõi trạng thái các hồ sơ ứng tuyển của bạn.</p>
+                    <h1 className="text-3xl font-bold text-foreground tracking-tight">Việc đã ứng tuyển</h1>
+                    <p className="text-muted-foreground mt-2">Theo dõi trạng thái các hồ sơ ứng tuyển của bạn.</p>
                 </div>
 
                 <div className="flex flex-col sm:flex-row gap-3">
                     <div className="relative">
-                        <Search className="absolute left-2.5 top-2.5 size-4 text-gray-500" />
+                        <Search className="absolute left-2.5 top-2.5 size-4 text-muted-foreground" />
                         <Input
                             placeholder="Tìm công ty, vị trí..."
-                            className="pl-9 w-full sm:w-60 bg-white"
+                            className="pl-9 w-full sm:w-60 bg-card text-card-foreground"
                             value={searchQuery}
                             onChange={(e) => setSearchQuery(e.target.value)}
                         />
@@ -266,7 +266,7 @@ export default function MyApplicationsPage() {
                             <Button
                                 variant={"outline"}
                                 className={cn(
-                                    "w-full sm:w-[240px] justify-start text-left font-normal bg-white",
+                                    "w-full sm:w-[240px] justify-start text-left font-normal bg-card text-card-foreground",
                                     !date.start && "text-muted-foreground"
                                 )}
                             >
@@ -292,13 +292,13 @@ export default function MyApplicationsPage() {
 
                     {date.start && (
                         <Button variant="ghost" size="icon" onClick={() => setDate({ start: undefined, end: undefined })} title="Xóa lọc ngày">
-                            <X className="size-4 text-gray-500" />
+                            <X className="size-4 text-muted-foreground" />
                         </Button>
                     )}
 
                     <div className="relative">
                         <select
-                            className="h-10 w-full sm:w-40 rounded-md border border-gray-200 bg-white px-3 py-2 text-sm text-gray-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2"
+                            className="h-10 w-full sm:w-40 rounded-md border border-border bg-card text-card-foreground px-3 py-2 text-sm text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2"
                             value={filterStatus}
                             onChange={(e) => setFilterStatus(e.target.value)}
                         >
@@ -317,20 +317,20 @@ export default function MyApplicationsPage() {
                     filteredApplications.map((app) => (
                         <div
                             key={app.id}
-                            className="group relative flex flex-col sm:flex-row items-start sm:items-center gap-4 bg-white p-5 rounded-xl border border-gray-100 shadow-sm transition-all hover:shadow-md hover:border-blue-100"
+                            className="group relative flex flex-col sm:flex-row items-start sm:items-center gap-4 bg-card text-card-foreground p-5 rounded-xl border border-border shadow-sm transition-all hover:shadow-md hover:border-blue-100"
                         >
-                            <div className={`flex h-14 w-14 shrink-0 items-center justify-center rounded-lg ${app.logoColor} text-white shadow-sm`}>
+                            <div className={`flex h-14 w-14 shrink-0 items-center justify-center rounded-lg ${app.logoColor} text-primary-foreground shadow-sm`}>
                                 <span className="text-xl font-bold">{app.logoInitial}</span>
                             </div>
 
                             <div className="flex-1 min-w-0 space-y-1">
                                 <div className="flex items-center gap-2">
-                                    <Link href={`/jobs/${app.jobId}`} onClick={(e) => { e.preventDefault(); handleViewDetails(app.jobId); }} className="font-semibold text-lg text-gray-900 hover:text-blue-600 transition-colors truncate block">
+                                    <Link href={`/jobs/${app.jobId}`} onClick={(e) => { e.preventDefault(); handleViewDetails(app.jobId); }} className="font-semibold text-lg text-foreground hover:text-primary transition-colors truncate block">
                                         {app.jobTitle}
                                     </Link>
                                 </div>
 
-                                <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-sm text-gray-500">
+                                <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-sm text-muted-foreground">
                                     <div className="flex items-center gap-1.5">
                                         <Building2 className="size-3.5" />
                                         <span>{app.company}</span>
@@ -344,7 +344,7 @@ export default function MyApplicationsPage() {
                                         <span>Ngày nộp: {app.appliedDate}</span>
                                     </div>
                                     {app.cvUrl && (
-                                        <div className="flex items-center gap-1.5 text-blue-600 hover:underline">
+                                        <div className="flex items-center gap-1.5 text-primary hover:underline">
                                             <FileText className="size-3.5" />
                                             <Link href={app.cvUrl} target="_blank">Xem hồ sơ đã nộp (CV)</Link>
                                         </div>
@@ -357,7 +357,7 @@ export default function MyApplicationsPage() {
 
                                 <DropdownMenu>
                                     <DropdownMenuTrigger asChild>
-                                        <Button variant="ghost" size="icon" className="text-gray-400 hover:text-gray-600 focus-visible:ring-0">
+                                        <Button variant="ghost" size="icon" className="text-muted-foreground hover:text-muted-foreground focus-visible:ring-0">
                                             <MoreVertical className="size-5" />
                                         </Button>
                                     </DropdownMenuTrigger>
@@ -373,7 +373,7 @@ export default function MyApplicationsPage() {
                                         </DropdownMenuItem>
 
                                         <DropdownMenuItem
-                                            className="cursor-pointer text-red-600 focus:text-red-600 focus:bg-red-50"
+                                            className="cursor-pointer text-destructive focus:text-destructive focus:bg-red-50"
                                             onClick={() => handleWithdrawClick(app.id)}
                                         >
                                             <Trash2 className="mr-2 h-4 w-4" /> Rút hồ sơ
@@ -384,18 +384,18 @@ export default function MyApplicationsPage() {
                         </div>
                     ))
                 ) : (
-                    <div className="text-center py-20 bg-white rounded-xl border border-dashed border-gray-200">
-                        <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-gray-50 mb-4">
-                            <ClipboardList className="h-8 w-8 text-gray-300" />
+                    <div className="text-center py-20 bg-card text-card-foreground rounded-xl border border-dashed border-border">
+                        <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-muted mb-4">
+                            <ClipboardList className="h-8 w-8 text-muted-foreground" />
                         </div>
-                        <h3 className="text-lg font-semibold text-gray-900">Không tìm thấy đơn ứng tuyển nào</h3>
-                        <p className="mt-2 text-sm text-gray-500 max-w-sm mx-auto">
+                        <h3 className="text-lg font-semibold text-foreground">Không tìm thấy đơn ứng tuyển nào</h3>
+                        <p className="mt-2 text-sm text-muted-foreground max-w-sm mx-auto">
                             {searchQuery || filterStatus !== 'all' || date.start
                                 ? "Thử thay đổi bộ lọc ngày tháng hoặc từ khóa tìm kiếm."
                                 : "Danh sách ứng tuyển đang trống."}
                         </p>
                         {(!searchQuery && filterStatus === 'all' && !date.start) && (
-                            <Button className="mt-6 bg-blue-600 hover:bg-blue-700" asChild>
+                            <Button className="mt-6 bg-primary hover:bg-primary/90" asChild>
                                 <Link href="/">Tìm việc ngay</Link>
                             </Button>
                         )}

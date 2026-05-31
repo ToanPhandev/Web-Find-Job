@@ -63,14 +63,14 @@ export function JobHero() {
     return (
         <div className="min-h-screen bg-background relative overflow-hidden">
             {/* Dot Pattern Background */}
-            <div className="absolute inset-0 -z-10 h-full w-full bg-white bg-[radial-gradient(#e5e7eb_1px,transparent_1px)] [background-size:16px_16px]"></div>
+            <div className="absolute inset-0 -z-10 h-full w-full bg-card text-card-foreground bg-[radial-gradient(#e5e7eb_1px,transparent_1px)] [background-size:16px_16px]"></div>
 
             <header className="container mx-auto px-4">
                 <div className="flex h-20 items-center justify-between">
                     <a href="#" className="flex items-center gap-2">
                         <div className="flex items-center space-x-2">
-                            <div className="bg-blue-600 p-2 rounded-lg">
-                                <Briefcase className="h-6 w-6 text-white" />
+                            <div className="bg-primary p-2 rounded-lg">
+                                <Briefcase className="h-6 w-6 text-primary-foreground" />
                             </div>
                             <span className="font-sans text-xl font-bold tracking-tight">FindJob</span>
                         </div>
@@ -78,7 +78,7 @@ export function JobHero() {
 
                     <nav className="hidden md:flex items-center space-x-8">
                         {navigationItems.map((item) => (
-                            <a key={item.title} href={item.href} className="text-sm font-medium text-muted-foreground hover:text-blue-600 transition-colors">
+                            <a key={item.title} href={item.href} className="text-sm font-medium text-muted-foreground hover:text-primary transition-colors">
                                 {item.title}
                             </a>
                         ))}
@@ -86,7 +86,7 @@ export function JobHero() {
 
                     <div className="flex items-center space-x-4">
                         <Button variant="ghost" className="hidden md:inline-flex font-medium">Đăng nhập</Button>
-                        <Button className="rounded-full hidden md:inline-flex bg-blue-600 hover:bg-blue-700 shadow-lg shadow-blue-200">
+                        <Button className="rounded-full hidden md:inline-flex bg-primary hover:bg-primary/90 shadow-lg shadow-blue-200">
                             Đăng Tuyển Ngay <ArrowRight className="ml-1 w-4 h-4" />
                         </Button>
 
@@ -100,11 +100,11 @@ export function JobHero() {
                             <SheetContent>
                                 <nav className="flex flex-col gap-6 mt-6">
                                     {navigationItems.map((item) => (
-                                        <a key={item.title} href={item.href} className="text-lg font-medium text-foreground hover:text-blue-600 transition-colors">
+                                        <a key={item.title} href={item.href} className="text-lg font-medium text-foreground hover:text-primary transition-colors">
                                             {item.title}
                                         </a>
                                     ))}
-                                    <Button className="w-full rounded-full bg-blue-600 hover:bg-blue-700">Đăng Tuyển Ngay</Button>
+                                    <Button className="w-full rounded-full bg-primary hover:bg-primary/90">Đăng Tuyển Ngay</Button>
                                 </nav>
                             </SheetContent>
                         </Sheet>
@@ -121,7 +121,7 @@ export function JobHero() {
                             initial={{ filter: "blur(10px)", opacity: 0, y: 50 }}
                             animate={{ filter: "blur(0px)", opacity: 1, y: 0 }}
                             transition={{ duration: 0.6 }}
-                            className="relative font-sans text-5xl font-extrabold sm:text-6xl md:text-7xl lg:text-8xl max-w-5xl mx-auto leading-tight tracking-tight text-gray-900"
+                            className="relative font-sans text-5xl font-extrabold sm:text-6xl md:text-7xl lg:text-8xl max-w-5xl mx-auto leading-tight tracking-tight text-foreground"
                         >
                             {titleWords.map((text, index) => (
                                 <motion.span
@@ -157,10 +157,10 @@ export function JobHero() {
                                     initial={{ opacity: 0, y: 20 }}
                                     animate={{ opacity: 1, y: 0 }}
                                     transition={{ delay: 1.2 + (index * 0.15), duration: 0.6, type: "spring", stiffness: 100, damping: 10 }}
-                                    className="flex items-center gap-2 px-4 py-2 bg-white rounded-full border shadow-sm hover:shadow-md transition-shadow cursor-default"
+                                    className="flex items-center gap-2 px-4 py-2 bg-card text-card-foreground rounded-full border shadow-sm hover:shadow-md transition-shadow cursor-default"
                                 >
-                                    <feature.icon className="h-4 w-4 text-blue-600" />
-                                    <span className="text-sm font-medium text-gray-700">{feature.label}</span>
+                                    <feature.icon className="h-4 w-4 text-primary" />
+                                    <span className="text-sm font-medium text-muted-foreground">{feature.label}</span>
                                 </motion.div>
                             ))}
                         </motion.div>
@@ -170,7 +170,7 @@ export function JobHero() {
                             animate={{ opacity: 1, y: 0 }}
                             transition={{ delay: 1.6, duration: 0.6, type: "spring", stiffness: 100, damping: 10 }}
                         >
-                            <Button size="lg" className="h-14 px-8 rounded-full mt-10 text-lg bg-blue-600 hover:bg-blue-700 shadow-xl shadow-blue-200 transition-all hover:scale-105">
+                            <Button size="lg" className="h-14 px-8 rounded-full mt-10 text-lg bg-primary hover:bg-primary/90 shadow-xl shadow-blue-200 transition-all hover:scale-105">
                                 TÌM VIỆC NGAY <ArrowRight className="ml-2 w-5 h-5" />
                             </Button>
                         </motion.div>
@@ -183,7 +183,7 @@ export function JobHero() {
                         animate={controls}
                         variants={{ visible: { opacity: 1, y: 0 } }}
                         transition={{ duration: 0.6 }}
-                        className="text-center text-3xl font-bold mb-12 text-gray-900"
+                        className="text-center text-3xl font-bold mb-12 text-foreground"
                     >
                         Tại sao chọn FindJob?
                     </motion.h2>
@@ -201,12 +201,12 @@ export function JobHero() {
                                 animate={controls}
                                 variants={{ visible: { opacity: 1, y: 0 } }}
                                 transition={{ delay: 0.2 + (index * 0.2), duration: 0.6, type: "spring", stiffness: 100, damping: 10 }}
-                                className="flex flex-col items-center text-center p-8 bg-white rounded-2xl border border-gray-100 shadow-sm hover:shadow-lg transition-all"
+                                className="flex flex-col items-center text-center p-8 bg-card text-card-foreground rounded-2xl border border-border shadow-sm hover:shadow-lg transition-all"
                             >
-                                <div className="mb-6 rounded-2xl bg-blue-50 p-4">
-                                    <feature.icon className="h-8 w-8 text-blue-600" />
+                                <div className="mb-6 rounded-2xl bg-primary/10 p-4">
+                                    <feature.icon className="h-8 w-8 text-primary" />
                                 </div>
-                                <h3 className="mb-3 text-xl font-bold text-gray-900">{feature.label}</h3>
+                                <h3 className="mb-3 text-xl font-bold text-foreground">{feature.label}</h3>
                                 <p className="text-muted-foreground text-sm leading-relaxed">{feature.description}</p>
                             </motion.div>
                         ))}

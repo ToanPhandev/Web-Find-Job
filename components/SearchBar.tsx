@@ -21,7 +21,7 @@ const SearchBar: React.FC<SearchBarProps> = ({ onSearch }) => {
         <div className="relative max-w-xl mx-auto mb-8">
             <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                 <svg
-                    className="h-5 w-5 text-gray-400"
+                    className="h-5 w-5 text-muted-foreground"
                     xmlns="http://www.w3.org/2000/svg"
                     viewBox="0 0 20 20"
                     fill="currentColor"
@@ -36,7 +36,7 @@ const SearchBar: React.FC<SearchBarProps> = ({ onSearch }) => {
             </div>
             <input
                 type="text"
-                className="block w-full pl-10 pr-3 py-3 border border-gray-300 rounded-full leading-5 bg-white placeholder-gray-500 text-gray-900 focus:outline-none focus:placeholder-gray-400 focus:ring-1 focus:ring-blue-500 focus:border-blue-500 sm:text-sm shadow-sm transition-all duration-200"
+                className="block w-full pl-10 pr-3 py-3 border border-border rounded-full leading-5 bg-card text-card-foreground placeholder-gray-500 text-foreground focus:outline-none focus:placeholder-gray-400 focus:ring-1 focus:ring-blue-500 focus:border-primary sm:text-sm shadow-sm transition-all duration-200"
                 placeholder="Tìm theo tên job, kỹ năng..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}

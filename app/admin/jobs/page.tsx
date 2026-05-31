@@ -82,7 +82,7 @@ export default function AdminJobsPage() {
             case 'active':
                 return <Badge className="bg-green-600 hover:bg-green-700">Đang tuyển</Badge>
             case 'draft':
-                return <Badge variant="secondary" className="bg-gray-200 text-gray-700 hover:bg-gray-300">Bản nháp</Badge>
+                return <Badge variant="secondary" className="bg-muted text-muted-foreground hover:bg-gray-300">Bản nháp</Badge>
             case 'closed':
                 return <Badge variant="destructive" className="bg-red-600 hover:bg-red-700">Đã đóng</Badge>
             default:
@@ -95,16 +95,16 @@ export default function AdminJobsPage() {
             <div className="flex items-center justify-between">
                 <div>
                     <h1 className="text-3xl font-bold tracking-tight">Quản lý việc làm</h1>
-                    <p className="text-gray-500 mt-2">Danh sách tất cả các tin tuyển dụng trên hệ thống.</p>
+                    <p className="text-muted-foreground mt-2">Danh sách tất cả các tin tuyển dụng trên hệ thống.</p>
                 </div>
-                <Button asChild className="bg-blue-600 hover:bg-blue-700">
+                <Button asChild className="bg-primary hover:bg-primary/90">
                     <Link href="/admin/jobs/new">
                         <Plus className="mr-2 h-4 w-4" /> Đăng tin mới
                     </Link>
                 </Button>
             </div>
 
-            <div className="bg-white border rounded-lg shadow-sm">
+            <div className="bg-card text-card-foreground border rounded-lg shadow-sm">
                 <Table>
                     <TableHeader>
                         <TableRow>
@@ -120,14 +120,14 @@ export default function AdminJobsPage() {
                             <TableRow>
                                 <TableCell colSpan={5} className="h-24 text-center">
                                     <div className="flex justify-center items-center">
-                                        <Loader2 className="h-6 w-6 animate-spin text-blue-600" />
-                                        <span className="ml-2 text-gray-500">Đang tải dữ liệu...</span>
+                                        <Loader2 className="h-6 w-6 animate-spin text-primary" />
+                                        <span className="ml-2 text-muted-foreground">Đang tải dữ liệu...</span>
                                     </div>
                                 </TableCell>
                             </TableRow>
                         ) : jobs.length === 0 ? (
                             <TableRow>
-                                <TableCell colSpan={5} className="h-24 text-center text-gray-500">
+                                <TableCell colSpan={5} className="h-24 text-center text-muted-foreground">
                                     Chưa có tin tuyển dụng nào.
                                 </TableCell>
                             </TableRow>
@@ -152,13 +152,13 @@ export default function AdminJobsPage() {
                                                 onClick={() => router.push(`/admin/jobs/${job.id}`)}
                                                 title="Chỉnh sửa"
                                             >
-                                                <Edit className="h-4 w-4 text-gray-500 hover:text-blue-600" />
+                                                <Edit className="h-4 w-4 text-muted-foreground hover:text-primary" />
                                             </Button>
                                             <Button
                                                 variant="ghost"
                                                 size="icon"
                                                 onClick={() => handleDelete(job.id)}
-                                                className="text-red-500 hover:text-red-700 hover:bg-red-50"
+                                                className="text-destructive hover:text-red-700 hover:bg-destructive/10"
                                                 title="Xóa"
                                             >
                                                 <Trash2 className="h-4 w-4" />

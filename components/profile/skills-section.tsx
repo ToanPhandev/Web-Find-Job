@@ -34,8 +34,8 @@ export default function SkillsSection({ skills, onChange, isEditing }: SkillsSec
     }
 
     return (
-        <div className="bg-white rounded-xl shadow-sm p-6">
-            <h2 className="font-bold text-gray-900 mb-4 text-lg">Kỹ năng</h2>
+        <div className="bg-card text-card-foreground rounded-xl shadow-sm p-6">
+            <h2 className="font-bold text-foreground mb-4 text-lg">Kỹ năng</h2>
 
             <div className="space-y-4">
                 {isEditing && (
@@ -48,7 +48,7 @@ export default function SkillsSection({ skills, onChange, isEditing }: SkillsSec
                         />
                         <button
                             onClick={addSkill}
-                            className="p-2 bg-blue-50 text-blue-600 rounded-md hover:bg-blue-100"
+                            className="p-2 bg-primary/10 text-primary rounded-md hover:bg-blue-100"
                         >
                             <Plus className="size-5" />
                         </button>
@@ -57,12 +57,12 @@ export default function SkillsSection({ skills, onChange, isEditing }: SkillsSec
 
                 <div className="flex flex-wrap gap-2">
                     {skills.map((skill) => (
-                        <Badge key={skill} variant="secondary" className="bg-gray-100 text-gray-700 text-sm py-1.5 px-3 flex items-center gap-1 group">
+                        <Badge key={skill} variant="secondary" className="bg-muted text-muted-foreground text-sm py-1.5 px-3 flex items-center gap-1 group">
                             {skill}
                             {isEditing && (
                                 <button
                                     onClick={() => removeSkill(skill)}
-                                    className="ml-1 text-gray-400 hover:text-red-500 rounded-full hover:bg-red-50 p-0.5"
+                                    className="ml-1 text-muted-foreground hover:text-destructive rounded-full hover:bg-destructive/10 p-0.5"
                                 >
                                     <X className="size-3" />
                                 </button>
@@ -71,7 +71,7 @@ export default function SkillsSection({ skills, onChange, isEditing }: SkillsSec
                     ))}
 
                     {skills.length === 0 && !isEditing && (
-                        <p className="text-gray-500 italic text-sm">Chưa có kỹ năng nào.</p>
+                        <p className="text-muted-foreground italic text-sm">Chưa có kỹ năng nào.</p>
                     )}
                 </div>
             </div>

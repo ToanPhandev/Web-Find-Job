@@ -41,7 +41,7 @@ const AIJobAnalyzer: React.FC<AIJobAnalyzerProps> = ({ description }) => {
             {!result && !loading && (
                 <button
                     onClick={handleAnalyze}
-                    className="group relative inline-flex items-center justify-center px-6 py-3 text-base font-medium text-white transition-all duration-200 bg-gradient-to-r from-purple-600 to-indigo-600 rounded-full hover:from-purple-700 hover:to-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500 shadow-md hover:shadow-lg transform hover:-translate-y-0.5"
+                    className="group relative inline-flex items-center justify-center px-6 py-3 text-base font-medium text-primary-foreground transition-all duration-200 bg-gradient-to-r from-purple-600 to-indigo-600 rounded-full hover:from-purple-700 hover:to-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500 shadow-md hover:shadow-lg transform hover:-translate-y-0.5"
                 >
                     <span className="mr-2">✨</span>
                     Phân tích độ phù hợp với AI
@@ -75,12 +75,12 @@ const AIJobAnalyzer: React.FC<AIJobAnalyzerProps> = ({ description }) => {
             )}
 
             {result && (
-                <div className="mt-4 bg-gray-50 border border-gray-200 rounded-xl p-6 shadow-sm">
+                <div className="mt-4 bg-muted border border-border rounded-xl p-6 shadow-sm">
                     <div className="flex items-center mb-3">
                         <span className="text-xl mr-2">🤖</span>
-                        <h4 className="text-lg font-bold text-gray-900">Đánh giá từ Mentor AI</h4>
+                        <h4 className="text-lg font-bold text-foreground">Đánh giá từ Mentor AI</h4>
                     </div>
-                    <div className="prose prose-purple max-w-none text-gray-700 whitespace-pre-wrap text-sm leading-relaxed">
+                    <div className="prose prose-purple max-w-none text-muted-foreground whitespace-pre-wrap text-sm leading-relaxed">
                         {result}
                     </div>
                 </div>

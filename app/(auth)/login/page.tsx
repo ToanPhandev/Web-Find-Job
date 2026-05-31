@@ -98,14 +98,14 @@ function LoginContent() {
     return (
         <div className="w-full max-w-md">
             {/* Hộp trắng bao trùm TẤT CẢ nội dung */}
-            <div className="bg-white py-8 px-4 shadow-xl sm:rounded-lg sm:px-10 border border-gray-100">
+            <div className="bg-card text-card-foreground py-8 px-4 shadow-xl sm:rounded-lg sm:px-10 border border-border">
 
                 {/* 1. Phần tiêu đề nằm TRONG hộp trắng */}
                 <div className="text-center mb-8">
-                    <h2 className="text-3xl font-extrabold text-gray-900">
+                    <h2 className="text-3xl font-extrabold text-foreground">
                         {isLogin ? 'Đăng nhập' : 'Đăng ký'}
                     </h2>
-                    <p className="mt-2 text-sm text-gray-500">
+                    <p className="mt-2 text-sm text-muted-foreground">
                         {isLogin ? 'Chào mừng bạn quay trở lại' : 'Tạo tài khoản mới để bắt đầu'}
                     </p>
                 </div>
@@ -123,7 +123,7 @@ function LoginContent() {
                 {/* 3. Phần Form nhập liệu */}
                 <form className="space-y-6" onSubmit={handleAuth}>
                     <div>
-                        <label htmlFor="email" className="block text-sm font-medium text-gray-700">
+                        <label htmlFor="email" className="block text-sm font-medium text-muted-foreground">
                             Email
                         </label>
                         <div className="mt-1">
@@ -135,13 +135,13 @@ function LoginContent() {
                                 required
                                 value={email}
                                 onChange={(e) => setEmail(e.target.value)}
-                                className="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm text-gray-900"
+                                className="appearance-none block w-full px-3 py-2 border border-border rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-primary sm:text-sm text-foreground"
                             />
                         </div>
                     </div>
 
                     <div>
-                        <label htmlFor="password" className="block text-sm font-medium text-gray-700">
+                        <label htmlFor="password" className="block text-sm font-medium text-muted-foreground">
                             Mật khẩu
                         </label>
                         <div className="mt-1 relative">
@@ -153,11 +153,11 @@ function LoginContent() {
                                 required
                                 value={password}
                                 onChange={(e) => setPassword(e.target.value)}
-                                className="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm text-gray-900 pr-10"
+                                className="appearance-none block w-full px-3 py-2 border border-border rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-primary sm:text-sm text-foreground pr-10"
                             />
                             <button
                                 type="button"
-                                className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600 focus:outline-none"
+                                className="absolute inset-y-0 right-0 pr-3 flex items-center text-muted-foreground hover:text-muted-foreground focus:outline-none"
                                 onClick={() => setShowPassword(!showPassword)}
                             >
                                 {showPassword ? (
@@ -177,7 +177,7 @@ function LoginContent() {
                                     setIsLogin(!isLogin);
                                     setMessage(null);
                                 }}
-                                className="font-medium text-blue-600 hover:text-blue-500 focus:outline-none"
+                                className="font-medium text-primary hover:text-blue-500 focus:outline-none"
                             >
                                 {isLogin ? 'Tạo tài khoản mới' : 'Đăng nhập ngay'}
                             </button>
@@ -187,7 +187,7 @@ function LoginContent() {
                             <div className="text-sm">
                                 <Link
                                     href="/forgot-password"
-                                    className="font-medium text-blue-600 hover:text-blue-500"
+                                    className="font-medium text-primary hover:text-blue-500"
                                 >
                                     Quên mật khẩu?
                                 </Link>
@@ -199,12 +199,12 @@ function LoginContent() {
                         <button
                             type="submit"
                             disabled={loading}
-                            className={`w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 ${loading ? 'opacity-70 cursor-not-allowed' : ''
+                            className={`w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-primary-foreground bg-primary hover:bg-primary/90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 ${loading ? 'opacity-70 cursor-not-allowed' : ''
                                 }`}
                         >
                             {loading ? (
                                 <svg
-                                    className="animate-spin -ml-1 mr-3 h-5 w-5 text-white"
+                                    className="animate-spin -ml-1 mr-3 h-5 w-5 text-primary-foreground"
                                     xmlns="http://www.w3.org/2000/svg"
                                     fill="none"
                                     viewBox="0 0 24 24"
